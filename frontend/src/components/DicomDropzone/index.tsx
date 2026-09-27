@@ -1,5 +1,5 @@
 import {
-    useRef,
+    useState,
     type ChangeEvent,
     type DragEvent,
 } from 'react';
@@ -10,14 +10,34 @@ import {
 } from '@/cores';
 import { useDicomFiles } from '@/hooks/useDicomFiles';
 
-export const DicomDropzone = () => {
-    const folderInputRef =
-        useRef<HTMLInputElement | null>(null);
+// DICOM 태그를 (GGGG,EEEE) 형식으로 변환
+const formatTag = (group: number, element: number): string => {
+    const toHex = (value: number): string =>
+        value.toString(16).toUpperCase().padStart(4, '0');
 
+    return `(${toHex(group)},${toHex(element)})`;
+};
+
+// 파일 크기 표시
+const formatFileSize = (size: number): string => {
+    if (size < 1024) {
+        return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+        return `${(size / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+export const DicomDropzone = () => {
+    const [isDragging, setIsDragging] = useState(false);
     const {
         status,
         progress,
         result,
+        headers,
         error,
         isBusy,
         processFiles,
@@ -28,42 +48,37 @@ export const DicomDropzone = () => {
     // 일반 파일 및 폴더 선택
     const handleFileChange = (
         event: ChangeEvent<HTMLInputElement>
-    ) => {
+    ): void => {
         const input = event.currentTarget;
 
         if (!input.files || isBusy) {
             return;
         }
 
-        const collected = collectSelectedFiles(
-            input.files
-        );
+        const collected = collectSelectedFiles(input.files);
 
-        input.value = "";
+        // 같은 파일을 다시 선택할 수 있도록 초기화
+        input.value = '';
 
-        void processFiles(
-            async signal => {
-                signal.throwIfAborted();
-                return collected;
-            }
-        );
+        void processFiles(async signal => {
+            signal.throwIfAborted();
+            return collected;
+        });
     };
 
     // Drag & Drop
     const handleDrop = (
         event: DragEvent<HTMLDivElement>
-    ) => {
+    ): void => {
         event.preventDefault();
+        setIsDragging(false);
 
         if (isBusy) {
             return;
         }
 
-        // Drop 이벤트 중 동기적으로 확보
-        const sources = captureDropSources(
-            event.dataTransfer
-        );
-
+        // Drop 이벤트 내에서 동기적으로 확보
+        const sources = captureDropSources(event.dataTransfer);
         void processFiles(
             signal => collectDroppedFiles(
                 sources,
@@ -72,43 +87,51 @@ export const DicomDropzone = () => {
         );
     };
 
-    const part10Count =
-        result?.files.filter(
-            file => file.type === "part10-candidate"
-        ).length ?? 0;
-
-    const unknownCount =
-        result?.files.filter(
-            file => file.type === "unknown"
-        ).length ?? 0;
+    const totalFiles = result?.files.length ?? 0;
+    const part10Count = result?.files.filter(file => file.type === 'part10-candidate').length ?? 0;
+    const unknownCount = result?.files.filter(file => file.type === 'unknown').length ?? 0;
+    const duplicateCount = result?.duplicates.length ?? 0;
+    const errorCount = result?.errors.length ?? 0;
+    const headerMap = new Map(headers.map(item => [item.fileId, item,]));
 
     return (
         <main className="inspector">
+            {/* 제목 */}
             <header>
                 <h1>DICOM Metadata Inspector</h1>
-                <p>
-                    Browser-based DICOM file inspection
-                </p>
+                <p>Browser-based DICOM metadata inspection</p>
             </header>
 
+            {/* 파일 입력 */}
             <section
-                className="dropzone"
+                className={`dropzone ${isDragging ? "dragging" : ""}`}
+                onDragEnter={event => {
+                    event.preventDefault();
+
+                    if (!isBusy) {
+                        setIsDragging(true);
+                    }
+                }}
                 onDragOver={event => {
                     event.preventDefault();
                 }}
-                onDrop={handleDrop}
-            >
-                <h2>Drop DICOM files here</h2>
+                onDragLeave={event => {
+                    event.preventDefault();
 
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                        setIsDragging(false);
+                    }
+                }}
+                onDrop={handleDrop}>
+                <h2>Drop DICOM files here</h2>
                 <p>
                     Files are processed locally
                     in your browser.
                 </p>
-
                 <div className="actions">
+                    {/* 다중 파일 선택 */}
                     <label className="file-button">
                         Select Files
-
                         <input
                             type="file"
                             multiple
@@ -117,145 +140,156 @@ export const DicomDropzone = () => {
                         />
                     </label>
 
+                    {/* 폴더 선택 */}
                     <label className="file-button">
                         Select Folder
-
                         <input
-                            ref={element => {
-                                folderInputRef.current = element;
-
-                                if (element) {
-                                    element.setAttribute(
-                                        "webkitdirectory",
-                                        ""
-                                    );
-                                }
-                            }}
                             type="file"
                             multiple
                             disabled={isBusy}
+                            ref={element => {
+                                element?.setAttribute(
+                                    "webkitdirectory",
+                                    ""
+                                );
+                            }}
                             onChange={handleFileChange}
                         />
                     </label>
                 </div>
             </section>
 
+            {/* 진행률 */}
             {isBusy && (
                 <section className="progress-panel">
-                    <p>
-                        {status === "collecting"
-                            ? "Collecting files..."
-                            : "Inspecting files..."}
-                    </p>
-
+                    <h3>{status === "collecting" ? "Collecting files..." : "Inspecting files..."}</h3>
                     {status === "processing" && (
                         <>
-                            <progress
-                                value={progress}
-                                max={100}
-                            />
-
-                            <span>{progress}%</span>
+                            <progress value={progress} max={100}/>
+                            <p>{progress}%</p>
                         </>
                     )}
-
-                    <button onClick={cancel}>
-                        Cancel
-                    </button>
+                    <button type="button" onClick={cancel}>Cancel</button>
                 </section>
             )}
 
-            {status === "cancelled" && (
-                <p role="status">
-                    Operation cancelled.
-                </p>
-            )}
+            {/* 작업 취소 */}
+            {status === "cancelled" && (<p role="status">Operation cancelled.</p>)}
 
-            {error && (
-                <p role="alert">
-                    {error}
-                </p>
-            )}
+            {/* 전체 오류 */}
+            {error && (<p role="alert">{error}</p>)}
 
+            {/* 검사 결과 */}
             {result && (
                 <section className="results">
                     <div className="result-header">
                         <h2>Inspection Results</h2>
-
-                        <button onClick={reset}>
-                            Clear
-                        </button>
+                        <button type="button" onClick={reset}>Clear</button>
                     </div>
 
+                    {/* 검사 요약 */}
                     <div className="summary">
-                        <p>
-                            Total: {result.files.length}
-                        </p>
-
-                        <p>
-                            Part 10 candidates: {part10Count}
-                        </p>
-
-                        <p>
-                            Unknown: {unknownCount}
-                        </p>
-
-                        <p>
-                            Duplicates: {result.duplicates.length}
-                        </p>
-
-                        <p>
-                            Errors: {result.errors.length}
-                        </p>
+                        <p>Total: {totalFiles}</p>
+                        <p>Part 10 candidates: {part10Count}</p>
+                        <p>Unknown: {unknownCount}</p>
+                        <p>Duplicates: {duplicateCount}</p>
+                        <p>Errors: {errorCount}</p>
                     </div>
 
-                    <h3>Files</h3>
+                    {/* 파일별 Header 검사 결과 */}
+                    <h3>File Headers</h3>
+                    <div className="table-container">
+                        <table className="dicom-table">
+                            <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Size</th>
+                                <th>Detection</th>
+                                <th>Prefix</th>
+                                <th>First Tag</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
 
-                    <ul className="file-list">
-                        {result.files.map(file => (
-                            <li key={file.id}>
-                                <span>{file.path}</span>
+                            <tbody>
+                            {result.files.map(file => {
+                                const inspected = headerMap.get(file.id);
+                                const header = inspected?.header;
+                                const firstTag = header?.firstTag;
 
-                                <span>
-                  {(file.size / 1024).toFixed(1)}
-                                    {" KB"}
-                </span>
+                                return (
+                                    <tr key={file.id}>
+                                        {/* 파일 경로 */}
+                                        <td title={file.path}>{file.path}</td>
 
-                                <span>{file.type}</span>
-                            </li>
-                        ))}
-                    </ul>
+                                        {/* 파일 크기 */}
+                                        <td>{formatFileSize(file.size)}</td>
 
-                    {result.duplicates.length > 0 && (
-                        <>
-                            <h3>Duplicate candidates</h3>
+                                        {/* FR-01 검사 결과 */}
+                                        <td>{file.type}</td>
 
+                                        {/* FR-02 Prefix */}
+                                        <td>
+                                            {inspected?.error
+                                                ? "Error"
+                                                : !inspected
+                                                    ? "Pending"
+                                                    : header?.prefix ?? "-"}
+                                        </td>
+
+                                        {/* FR-02 첫 번째 태그 */}
+                                        <td>
+                                            {firstTag
+                                                ? formatTag(
+                                                    firstTag.group,
+                                                    firstTag.element
+                                                )
+                                                : "-"}
+                                        </td>
+
+                                        {/* 검사 상태 */}
+                                        <td>
+                                            {inspected?.error
+                                                ? inspected.error
+                                                : !inspected
+                                                    ? "Pending"
+                                                    : header?.isPart10Candidate
+                                                        ? "Candidate"
+                                                        : "Unknown"}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* 중복 파일 */}
+                    {duplicateCount > 0 && (
+                        <section>
+                            <h3>Duplicate Candidates</h3>
                             <ul>
                                 {result.duplicates.map(
-                                    (path, index) => (
-                                        <li key={`${path}-${index}`}>
-                                            {path}
-                                        </li>
-                                    )
+                                    (path, index) => (<li key={`${path}-${index}`}>{path}</li>)
                                 )}
                             </ul>
-                        </>
+                        </section>
                     )}
 
-                    {result.errors.length > 0 && (
-                        <>
-                            <h3>Errors</h3>
-
+                    {/* 파일별 오류 */}
+                    {errorCount > 0 && (
+                        <section>
+                            <h3>File Errors</h3>
                             <ul>
                                 {result.errors.map(
                                     (item, index) => (
                                         <li key={index}>
-                                            {item.path}: {item.message}
+                                            <strong>{item.path}</strong>{" — "}{item.message}
                                         </li>
                                     )
                                 )}
                             </ul>
-                        </>
+                        </section>
                     )}
                 </section>
             )}

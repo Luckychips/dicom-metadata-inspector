@@ -1,9 +1,17 @@
 import { useCallback, useRef, useState } from 'react';
 import {
+    inspectFileHeader,
     processDicomFiles,
     type CollectionResult,
+    type DicomHeaderInfo,
     type FileProcessResult,
 } from '@/cores';
+
+export interface InspectedHeader {
+    fileId: string;
+    header: DicomHeaderInfo | null;
+    error?: string;
+}
 
 type ProcessStatus =
     | 'idle'
@@ -15,6 +23,7 @@ type ProcessStatus =
 
 export const useDicomFiles = () => {
     const controllerRef = useRef<AbortController | null>(null);
+    const [headers, setHeaders] = useState<InspectedHeader[]>([]);
     const [status, setStatus] = useState<ProcessStatus>("idle");
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState<FileProcessResult | null>(null);
@@ -35,6 +44,7 @@ export const useDicomFiles = () => {
 
             controllerRef.current = controller;
 
+            setHeaders([]);
             setStatus('collecting');
             setProgress(0);
             setResult(null);
@@ -59,7 +69,34 @@ export const useDicomFiles = () => {
 
                 controller.signal.throwIfAborted();
 
-                // 3. 수집 오류와 처리 오류 병합
+                // 3. Header 검사
+                const inspectedHeaders: InspectedHeader[] = [];
+
+                for (const entry of output.files) {
+                    controller.signal.throwIfAborted();
+
+                    try {
+                        const header = await inspectFileHeader(entry, controller.signal);
+                        controller.signal.throwIfAborted();
+
+                        inspectedHeaders.push({
+                            fileId: entry.id,
+                            header,
+                        });
+                    } catch (error) {
+                        controller.signal.throwIfAborted();
+                        inspectedHeaders.push({
+                            fileId: entry.id,
+                            header: null,
+                            error: error instanceof Error ? error.message : 'Header inspection failed',
+                        });
+                    }
+                }
+
+                controller.signal.throwIfAborted();
+                setHeaders(inspectedHeaders);
+
+                // 4. 수집 오류와 처리 오류 병합
                 setResult({
                     ...output,
                     errors: [
@@ -96,6 +133,7 @@ export const useDicomFiles = () => {
             return;
         }
 
+        setHeaders([]);
         setStatus('idle');
         setProgress(0);
         setResult(null);
@@ -103,6 +141,7 @@ export const useDicomFiles = () => {
     }, []);
 
     return {
+        headers,
         status,
         progress,
         result,
