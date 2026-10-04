@@ -10,3 +10,16 @@ export * from './binary/reader';
 export * from './binary/cursor';
 export * from './binary/string';
 export * from './binary/file';
+
+// src/core/dicom/index.ts
+
+export * from './dicom/types';
+export * from './dicom/constants';
+export * from './dicom/errors';
+export * from './dicom/vr';
+
+export * from './dicom/transfer';
+export * from './dicom/header';
+export * from './dicom/metadata';
+export * from './dicom/parser/dataset';
+export * from './dicom/parser/file';
