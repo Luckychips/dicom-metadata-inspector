@@ -1,5 +1,3 @@
-export type DicomFileType = | 'part10-candidate' | 'unknown' | 'invalid';
-
 export interface CollectedFile {
     file: File;
     path: string;
@@ -12,7 +10,6 @@ export interface DicomFileEntry {
     path: string;
     size: number;
     lastModified: number;
-    type: DicomFileType;
 }
 
 export interface FileError {

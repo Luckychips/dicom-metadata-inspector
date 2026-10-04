@@ -10,14 +10,6 @@ import {
 } from '@/cores';
 import { useDicomFiles } from '@/hooks/useDicomFiles';
 
-// DICOM 태그를 (GGGG,EEEE) 형식으로 변환
-const formatTag = (group: number, element: number): string => {
-    const toHex = (value: number): string =>
-        value.toString(16).toUpperCase().padStart(4, '0');
-
-    return `(${toHex(group)},${toHex(element)})`;
-};
-
 // 파일 크기 표시
 const formatFileSize = (size: number): string => {
     if (size < 1024) {
@@ -37,7 +29,7 @@ export const DicomDropzone = () => {
         status,
         progress,
         result,
-        headers,
+        parsedFiles,
         error,
         isBusy,
         processFiles,
@@ -92,7 +84,7 @@ export const DicomDropzone = () => {
     const unknownCount = result?.files.filter(file => file.type === 'unknown').length ?? 0;
     const duplicateCount = result?.duplicates.length ?? 0;
     const errorCount = result?.errors.length ?? 0;
-    const headerMap = new Map(headers.map(item => [item.fileId, item,]));
+    const parsedFileMap = new Map(parsedFiles.map(item => [item.fileId, item]));
 
     return (
         <main className="inspector">
@@ -212,54 +204,29 @@ export const DicomDropzone = () => {
                             </thead>
 
                             <tbody>
-                            {result.files.map(file => {
-                                const inspected = headerMap.get(file.id);
-                                const header = inspected?.header;
-                                const firstTag = header?.firstTag;
+                                {result.files.map(file => {
+                                    const parseResult = parsedFileMap.get(file.id);
+                                    const parsed = parseResult?.parsed;
 
-                                return (
-                                    <tr key={file.id}>
-                                        {/* 파일 경로 */}
-                                        <td title={file.path}>{file.path}</td>
-
-                                        {/* 파일 크기 */}
-                                        <td>{formatFileSize(file.size)}</td>
-
-                                        {/* FR-01 검사 결과 */}
-                                        <td>{file.type}</td>
-
-                                        {/* FR-02 Prefix */}
-                                        <td>
-                                            {inspected?.error
-                                                ? "Error"
-                                                : !inspected
-                                                    ? "Pending"
-                                                    : header?.prefix ?? "-"}
-                                        </td>
-
-                                        {/* FR-02 첫 번째 태그 */}
-                                        <td>
-                                            {firstTag
-                                                ? formatTag(
-                                                    firstTag.group,
-                                                    firstTag.element
-                                                )
-                                                : "-"}
-                                        </td>
-
-                                        {/* 검사 상태 */}
-                                        <td>
-                                            {inspected?.error
-                                                ? inspected.error
-                                                : !inspected
-                                                    ? "Pending"
-                                                    : header?.isPart10Candidate
-                                                        ? "Candidate"
-                                                        : "Unknown"}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                    return (
+                                        <tr key={file.id}>
+                                            <td>{file.path}</td>
+                                            <td>{formatFileSize(file.size)}</td>
+                                            <td>{file.type}</td>
+                                            <td>{parsed?.isPart10 ? 'Yes' : '-'}</td>
+                                            <td>{parsed?.fileMeta.transferSyntaxUID ?? '-'}</td>
+                                            <td>{parsed?.fileMeta.elements.length ?? '-'}</td>
+                                            <td>{parsed?.dataset.elements.length ?? '-'}</td>
+                                            <td>
+                                                {parseResult?.error
+                                                    ? parseResult.error
+                                                    : parsed?.dataset.stoppedEarly
+                                                        ? `Partial: ${parsed.dataset.stopReason}`
+                                                        : parsed ? 'Parsed' : 'Pending'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

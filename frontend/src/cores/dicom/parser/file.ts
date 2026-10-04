@@ -1,10 +1,14 @@
-import { createBinaryContext, readAscii } from '@/cores';
-import { parseDataset } from './dataset';
-import { createDicomParseError } from '../errors';
-import { parseFileMeta } from '../metadata';
-import { resolveTransferSyntax } from '../transfer';
-import { DICOM_PREFIX, DICOM_PREFIX_OFFSET } from '../constants';
-import type { ParseDatasetOptions, ParsedDicomFile } from '../types';
+import {
+    createBinaryContext,
+    createDicomParseError,
+    parseDataset,
+    parseFileMeta,
+    readAscii,
+    readFileBuffer,
+    resolveTransferSyntax,
+} from '@/cores';
+import { DICOM_PREFIX, DICOM_PREFIX_OFFSET } from '@/cores';
+import type { ParseDatasetOptions, ParsedDicomFile } from '@/cores';
 
 export const parseDicomBuffer = (buffer: ArrayBuffer, options: ParseDatasetOptions = {}): ParsedDicomFile => {
     /**
@@ -61,9 +65,7 @@ export const parseDicomBuffer = (buffer: ArrayBuffer, options: ParseDatasetOptio
 };
 
 export const parseDicomFile = async (file: File, options: ParseDatasetOptions = {}, signal?: AbortSignal): Promise<ParsedDicomFile> => {
-    signal?.throwIfAborted();
-
-    const buffer = await file.arrayBuffer();
+    const buffer = await readFileBuffer(file, signal);
 
     signal?.throwIfAborted();
 

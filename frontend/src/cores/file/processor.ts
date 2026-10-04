@@ -1,57 +1,33 @@
-import { detectDicomFile } from './detector';
-import { createFileKey, isDuplicate } from './duplicate';
 import type {
     CollectedFile,
-    DicomFileEntry,
     FileProcessOptions,
     FileProcessResult,
 } from './types';
-
-const getErrorMessage = (error: unknown): string => {
-    return error instanceof Error ? error.message : 'Unknown file error';
-};
 
 export const processDicomFiles = async (
     input: CollectedFile[],
     options: FileProcessOptions = {}
 ): Promise<FileProcessResult> => {
     const { signal, onProgress } = options;
-    const existingKeys = new Set<string>();
-    const result: FileProcessResult = {
-        files: [],
-        duplicates: [],
-        errors: [],
-    };
+
+    const files: FileProcessResult['files'] = [];
+    const duplicates: FileProcessResult['duplicates'] = [];
+    const errors: FileProcessResult['errors'] = [];
+
+    const seen = new Set<string>();
 
     const total = input.length;
 
-    signal?.throwIfAborted();
+    onProgress?.({ processed: 0, total, percentage: 0 });
 
-    onProgress?.({
-        processed: 0,
-        total,
-        percentage: total === 0 ? 100 : 0,
-    });
-
-    for (const [index, entry] of input.entries()) {
+    for (let index = 0; index < input.length; index += 1) {
         signal?.throwIfAborted();
 
-        const { file, path } = entry;
-
+        const { file, path } = input[index];
         try {
-            // 1. 중복 검사
-            if (isDuplicate(entry, existingKeys)) {
-                result.duplicates.push(path);
-                continue;
-            }
-
-            // 2. 파일 후보 식별
-            const type = await detectDicomFile(file, signal);
-            signal?.throwIfAborted();
-
-            // 3. 빈 파일 처리
-            if (type === 'invalid') {
-                result.errors.push({
+            // 빈 파일 검사
+            if (file.size === 0) {
+                errors.push({
                     path,
                     code: 'EMPTY_FILE',
                     message: 'File is empty',
@@ -60,42 +36,46 @@ export const processDicomFiles = async (
                 continue;
             }
 
-            // 4. 파일 정보 생성
-            const fileEntry: DicomFileEntry = {
-                id: crypto.randomUUID(),
+            // 기존 중복 검사 로직은 그대로 유지
+            const duplicateKey = [file.name, file.size, file.lastModified].join(':');
+            if (seen.has(duplicateKey)) {
+                duplicates.push(path);
+                continue;
+            }
 
+            seen.add(duplicateKey);
+            files.push({
+                id: crypto.randomUUID(),
                 file,
                 name: file.name,
                 path,
                 size: file.size,
                 lastModified: file.lastModified,
-
-                type,
-            };
-
-            // 5. 처리 결과 반영
-            result.files.push(fileEntry);
-            existingKeys.add(createFileKey(entry));
+            });
         } catch (error) {
             signal?.throwIfAborted();
-
-            result.errors.push({
+            errors.push({
                 path,
                 code: 'READ_ERROR',
-                message: getErrorMessage(error),
+                message: error instanceof Error ? error.message : 'Failed to process file',
             });
         } finally {
             const processed = index + 1;
-
             onProgress?.({
                 processed,
                 total,
-                percentage: Math.round(
-                    (processed / total) * 100
-                ),
+                percentage: total === 0
+                    ? 100
+                    : Math.round((processed / total) * 100),
             });
         }
     }
 
-    return result;
+    signal?.throwIfAborted();
+
+    return {
+        files,
+        duplicates,
+        errors,
+    };
 };
