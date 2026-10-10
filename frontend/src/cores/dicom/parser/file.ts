@@ -7,23 +7,20 @@ import {
     readFileBuffer,
     resolveTransferSyntax,
 } from '@/cores';
-import { DICOM_PREFIX, DICOM_PREFIX_OFFSET } from '@/cores';
+import { DICOM_DATASET_OFFSET, DICOM_PREFIX, DICOM_PREFIX_OFFSET } from '@/cores';
 import type { ParseDatasetOptions, ParsedDicomFile } from '@/cores';
 
 export const parseDicomBuffer = (buffer: ArrayBuffer, options: ParseDatasetOptions = {}): ParsedDicomFile => {
-    /**
-     * 128 preamble + DICM = 최소 132 bytes
-     */
-    if (buffer.byteLength < 132) {
-        throw createDicomParseError('INVALID_PART10', 'File is too small to contain a DICOM Part 10 header');
+    if (buffer.byteLength < DICOM_DATASET_OFFSET) {
+        throw createDicomParseError('INVALID_PART10', 'File is too small to be a DICOM Part 10 file');
     }
 
-    const prefixContext = createBinaryContext(buffer, 'LE');
-    const prefix = readAscii(prefixContext, DICOM_PREFIX_OFFSET, 4).value;
+    const context = createBinaryContext(buffer, 'LE');
+    const prefix = readAscii(context, DICOM_PREFIX_OFFSET, 4).value;
     if (prefix !== DICOM_PREFIX) {
         throw createDicomParseError(
             'INVALID_PREFIX',
-            `Expected DICM prefix but found '${prefix}'`,
+            'DICOM Part 10 prefix DICM was not found',
             DICOM_PREFIX_OFFSET
         );
     }
@@ -31,31 +28,26 @@ export const parseDicomBuffer = (buffer: ArrayBuffer, options: ParseDatasetOptio
     // ----------------------------
     // File Meta
     // ----------------------------
-
     const fileMeta = parseFileMeta(buffer);
     if (!fileMeta.transferSyntaxUID) {
-        throw createDicomParseError('MISSING_TRANSFER_SYNTAX', 'Transfer Syntax UID (0002,0010) was not found');
+        throw createDicomParseError('MISSING_TRANSFER_SYNTAX', 'Transfer Syntax UID was not found in File Meta Information');
     }
 
     // ----------------------------
     // Transfer Syntax
     // ----------------------------
-
     const transferSyntax = resolveTransferSyntax(fileMeta.transferSyntaxUID);
-    if (!transferSyntax.supported) {
+    if (!transferSyntax.metadataSupported) {
         throw createDicomParseError(
             'UNSUPPORTED_TRANSFER_SYNTAX',
-            `Unsupported Transfer Syntax: ${transferSyntax.uid}`,
-            fileMeta.datasetOffset
+            `Unsupported Transfer Syntax for metadata parsing: ${transferSyntax.uid}`
         );
     }
 
     // ----------------------------
     // Dataset
     // ----------------------------
-
     const dataset = parseDataset(buffer, fileMeta.datasetOffset, transferSyntax, options);
-
     return {
         isPart10: true,
         fileMeta,

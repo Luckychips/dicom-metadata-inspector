@@ -1,12 +1,11 @@
-import { createBinaryContext, readBytes } from '@/cores';
-import { parseElementHeader } from '../header.ts';
-import { PIXEL_DATA_TAG } from '../constants.ts';
+import { createBinaryContext, readBytes, parseElementHeader } from '@/cores';
+import { PIXEL_DATA_TAG } from '@/cores';
 import type {
     ParseDatasetOptions,
     ParsedDataElement,
     ParsedDataset,
     TransferSyntax,
-} from '../types.ts';
+} from '@/cores';
 
 const isPixelData = (group: number, element: number) => {
     return group === PIXEL_DATA_TAG.group && element === PIXEL_DATA_TAG.element;

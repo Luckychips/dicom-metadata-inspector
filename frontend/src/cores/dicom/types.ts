@@ -3,8 +3,14 @@ export type DicomVR = | 'AE' | 'AS' | 'AT' | 'CS' | 'DA' | 'DS' | 'DT' | 'FD' | 
     | 'SH' | 'SL' | 'SQ' | 'SS' | 'ST' | 'SV' | 'TM'
     | 'UC' | 'UI' | 'UL' | 'UN' | 'UR' | 'US' | 'UT' | 'UV';
 
-export type TransferSyntaxKind = | 'explicit-vr-little-endian' | 'implicit-vr-little-endian'
-    | 'explicit-vr-big-endian' | 'unsupported';
+export type TransferSyntaxKind =
+    | 'implicit-vr-little-endian'
+    | 'explicit-vr-little-endian'
+    | 'explicit-vr-big-endian'
+    | 'deflated-explicit-vr-little-endian'
+    | 'encapsulated-explicit-vr-little-endian'
+    | 'unknown';
+
 
 export interface DicomTag {
     group: number;
@@ -61,18 +67,37 @@ export interface FileMetaInformation {
 
 export interface TransferSyntax {
     uid: string;
+
     kind: TransferSyntaxKind;
 
+    /**
+     * Dataset에서 Explicit VR을 사용하는지 여부
+     */
     explicitVR: boolean;
+
+    /**
+     * Dataset byte order
+     */
     littleEndian: boolean;
 
     /**
-     * Pixel Data가 압축 Transfer Syntax일 가능성.
-     * FR-03에서는 pixel decode를 하지 않음.
+     * Pixel Data가 encapsulated 형태인지 여부
      */
     encapsulated: boolean;
 
-    supported: boolean;
+    /**
+     * 현재 Metadata Inspector가
+     * Dataset 구조를 파싱할 수 있는지 여부
+     */
+    metadataSupported: boolean;
+
+    /**
+     * 현재 애플리케이션에서 Pixel Data를
+     * 실제 영상으로 decode할 수 있는지 여부
+     *
+     * 현재 프로젝트에서는 false.
+     */
+    pixelDataDecodingSupported: boolean;
 }
 
 export interface ParsedDataElement extends DicomElementHeader {
