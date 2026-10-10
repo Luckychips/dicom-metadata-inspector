@@ -12,6 +12,8 @@ export * from './binary/file';
 
 export * from './dicom/types';
 export * from './dicom/constants';
+export * from './dicom/decoder';
+export * from './dicom/dictionary';
 export * from './dicom/errors';
 export * from './dicom/vr';
 

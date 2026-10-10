@@ -2,6 +2,7 @@ import {
     createBinaryContext,
     parseElementHeader,
     readBytes,
+    resolveElementVR,
 } from '@/cores';
 import {
     ITEM_GROUP,
@@ -446,10 +447,14 @@ const parseDatasetRegion = (
         /**
          * 일반 Data Element Header
          */
-        const header = parseElementHeader(state.context, offset, {
-            explicitVR:
-            state.transferSyntax.explicitVR,
+        const parsedHeader = parseElementHeader(state.context, offset, {
+            explicitVR: state.transferSyntax.explicitVR,
         });
+        const resolvedVR = resolveElementVR(parsedHeader.tag, parsedHeader.vr);
+        const header: DicomElementHeader = {
+            ...parsedHeader,
+            vr: resolvedVR.vr,
+        };
 
         /**
          * Header가 현재 Dataset 영역을

@@ -221,3 +221,60 @@ export interface DicomSequenceItem {
      */
     endOffset: number;
 }
+
+export interface DicomDictionaryEntry {
+    /**
+     * DICOM Attribute Name
+     *
+     * 예:
+     * PatientName
+     * StudyInstanceUID
+     */
+    name: string;
+
+    /**
+     * 사람이 읽을 수 있는 이름
+     *
+     * 예:
+     * Patient Name
+     * Study Instance UID
+     */
+    keyword: string;
+
+    /**
+     * 표준 VR
+     *
+     * 일부 Attribute는 복수 VR을 가질 수 있다.
+     */
+    vr: readonly DicomVR[];
+
+    /**
+     * Value Multiplicity
+     *
+     * 예:
+     * 1
+     * 1-n
+     * 2
+     * 3
+     */
+    vm: string;
+}
+
+export interface ResolvedDicomVR {
+    /**
+     * 최종적으로 사용할 VR.
+     *
+     * Dictionary에도 없는 경우 null.
+     */
+    vr: DicomVR | null;
+
+    /**
+     * VR 출처
+     */
+    source: | 'explicit' | 'dictionary' | 'unknown';
+
+    /**
+     * Dictionary Entry
+     */
+    dictionaryEntry: | DicomDictionaryEntry | null;
+}
