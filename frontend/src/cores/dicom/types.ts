@@ -144,3 +144,26 @@ export interface ParseDatasetOptions {
      */
     maxElements?: number;
 }
+
+export interface DecodedDicomTag {
+    group: number;
+    element: number;
+}
+
+export type DicomPrimitiveValue = | string | number | bigint | DecodedDicomTag | Uint8Array;
+export type DicomDecodedValue = | DicomPrimitiveValue | DicomPrimitiveValue[] | null;
+
+export interface DecodeValueOptions {
+    littleEndian?: boolean;
+
+    /**
+     * Text VR decoding에 사용할 문자 인코딩.
+     *
+     * 현재 기본값은 utf-8이 아니라 ASCII 호환 처리를
+     * 우선 사용한다.
+     *
+     * Specific Character Set의 완전한 처리는
+     * 별도 단계에서 확장한다.
+     */
+    encoding?: string;
+}
