@@ -101,11 +101,21 @@ export interface TransferSyntax {
 }
 
 export interface ParsedDataElement extends DicomElementHeader {
-    /**
-     * FR-03에서는 raw bytes만 유지.
-     * 실제 VR별 값 변환은 FR-05에서 수행.
-     */
     rawValue: Uint8Array | null;
+
+    /**
+     * VR이 SQ인 경우 Item 목록.
+     *
+     * 일반 Data Element에서는 undefined.
+     */
+    items?: DicomSequenceItem[];
+
+    /**
+     * Undefined Length SQ 및
+     * Encapsulated Pixel Data 등의
+     * 실제 종료 위치.
+     */
+    endOffset?: number;
 }
 
 export interface ParsedDataset {
@@ -134,15 +144,22 @@ export interface ParsedDicomFile {
 
 export interface ParseDatasetOptions {
     /**
-     * Pixel Data raw bytes를 메모리에 포함할지 여부.
-     * 기본 false.
+     * Pixel Data Raw Value 보관 여부
      */
     includePixelData?: boolean;
 
     /**
-     * 비정상 파일에 의한 무한/과도한 순회를 방지.
+     * 전체 Dataset에서 허용하는
+     * 최대 Data Element 개수.
+     *
+     * 중첩 Dataset 포함.
      */
     maxElements?: number;
+
+    /**
+     * 최대 Sequence 중첩 깊이
+     */
+    maxDepth?: number;
 }
 
 export interface DecodedDicomTag {
@@ -166,4 +183,41 @@ export interface DecodeValueOptions {
      * 별도 단계에서 확장한다.
      */
     encoding?: string;
+}
+
+export interface DicomSequenceItem {
+    /**
+     * Item 시작 offset.
+     * (FFFE,E000) 위치
+     */
+    offset: number;
+
+    /**
+     * Item Value 시작 offset.
+     * Item Header 8바이트 이후
+     */
+    valueOffset: number;
+
+    /**
+     * Item Length
+     */
+    valueLength: number;
+
+    /**
+     * Undefined Length 여부
+     */
+    undefinedLength: boolean;
+
+    /**
+     * Item에 포함된 Dataset
+     */
+    dataset: ParsedDataset;
+
+    /**
+     * Item 종료 위치.
+     *
+     * Undefined Length에서는
+     * Item Delimitation까지 포함한 다음 위치.
+     */
+    endOffset: number;
 }

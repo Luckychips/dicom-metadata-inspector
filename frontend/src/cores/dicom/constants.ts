@@ -6,6 +6,38 @@ export const UNDEFINED_LENGTH = 0xffffffff;
 
 export const FILE_META_GROUP = 0x0002;
 
+/**
+ * Sequence Item
+ *
+ * (FFFE,E000)
+ */
+export const ITEM_GROUP = 0xfffe;
+
+export const ITEM_ELEMENT = 0xe000;
+
+/**
+ * Item Delimitation
+ *
+ * (FFFE,E00D)
+ */
+export const ITEM_DELIMITATION_ELEMENT = 0xe00d;
+
+/**
+ * Sequence Delimitation
+ *
+ * (FFFE,E0DD)
+ */
+export const SEQUENCE_DELIMITATION_ELEMENT = 0xe0dd;
+
+/**
+ * Pixel Data
+ *
+ * (7FE0,0010)
+ */
+export const PIXEL_DATA_GROUP = 0x7fe0;
+
+export const PIXEL_DATA_ELEMENT = 0x0010;
+
 export const TRANSFER_SYNTAX_UID_TAG = {
     group: 0x0002,
     element: 0x0010,
