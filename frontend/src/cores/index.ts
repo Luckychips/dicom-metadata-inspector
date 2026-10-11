@@ -22,3 +22,9 @@ export * from './dicom/header';
 export * from './dicom/metadata';
 export * from './dicom/parser/dataset';
 export * from './dicom/parser/file';
+
+export * from './dicom/normalize/dataset';
+export * from './dicom/normalize/element';
+export * from './dicom/normalize/file';
+export * from './dicom/normalize/types';
+export * from './dicom/normalize/utils';
