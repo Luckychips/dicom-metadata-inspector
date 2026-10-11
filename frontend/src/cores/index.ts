@@ -33,3 +33,8 @@ export * from './dicom/normalize/utils';
 export * from './dicom/grouping/file';
 export * from './dicom/grouping/types';
 export * from './dicom/grouping/utils';
+
+export * from './dicom/search/types';
+export * from './dicom/search/utils';
+export * from './dicom/search/dataset';
+export * from './dicom/search/file';
