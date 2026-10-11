@@ -9,8 +9,8 @@ import {
     collectDroppedFiles,
 } from '@/cores';
 import { useDicomFiles } from '@/hooks/useDicomFiles';
+import { MetadataSearch } from '@/components';
 
-// 파일 크기 표시
 const formatFileSize = (size: number): string => {
     if (size < 1024) {
         return `${size} B`;
@@ -23,19 +23,20 @@ const formatFileSize = (size: number): string => {
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export const DicomDropzone = () => {
-    const [isDragging, setIsDragging] = useState(false);
+const DicomDropzone = () => {
     const {
+        parsedFiles,
+        grouping,
         status,
         progress,
         result,
-        parsedFiles,
         error,
         isBusy,
         processFiles,
         cancel,
         reset,
     } = useDicomFiles();
+    const [isDragging, setIsDragging] = useState(false);
 
     // 일반 파일 및 폴더 선택
     const handleFileChange = (
@@ -80,8 +81,8 @@ export const DicomDropzone = () => {
     };
 
     const totalFiles = result?.files.length ?? 0;
-    const part10Count = result?.files.filter(file => file.type === 'part10-candidate').length ?? 0;
-    const unknownCount = result?.files.filter(file => file.type === 'unknown').length ?? 0;
+    const part10Count = result?.files.filter(file => file.file.type === 'part10-candidate').length ?? 0;
+    const unknownCount = result?.files.filter(file => file.file.type === 'unknown').length ?? 0;
     const duplicateCount = result?.duplicates.length ?? 0;
     const errorCount = result?.errors.length ?? 0;
     const parsedFileMap = new Map(parsedFiles.map(item => [item.fileId, item]));
@@ -212,7 +213,7 @@ export const DicomDropzone = () => {
                                         <tr key={file.id}>
                                             <td>{file.path}</td>
                                             <td>{formatFileSize(file.size)}</td>
-                                            <td>{file.type}</td>
+                                            <td>{file.file.type}</td>
                                             <td>{parsed?.isPart10 ? 'Yes' : '-'}</td>
                                             <td>{parsed?.fileMeta.transferSyntaxUID ?? '-'}</td>
                                             <td>{parsed?.fileMeta.elements.length ?? '-'}</td>
@@ -260,6 +261,10 @@ export const DicomDropzone = () => {
                     )}
                 </section>
             )}
+
+            {grouping && <MetadataSearch grouping={grouping} />}
         </main>
     );
 };
+
+export default DicomDropzone;

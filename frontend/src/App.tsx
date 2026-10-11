@@ -1,4 +1,4 @@
-import { DicomDropzone } from '@/components/DicomDropzone';
+import { DicomDropzone } from '@/components';
 import './App.css'
 
 function App() {
