@@ -1,16 +1,23 @@
 import { useCallback, useRef, useState } from 'react';
 import {
+    groupDicomFiles,
     isDicomParseError,
+    normalizeDicomFile,
     parseDicomFile,
     processDicomFiles,
     type CollectionResult,
+    type DicomGroupingFile,
+    type DicomGroupingResult,
     type FileProcessResult,
+    type NormalizedDicomFile,
     type ParsedDicomFile,
 } from '@/cores';
 
 export interface ParsedFileResult {
     fileId: string;
+    file: File;
     parsed: ParsedDicomFile | null;
+    normalized: NormalizedDicomFile | null;
     error?: string;
 }
 
@@ -24,16 +31,8 @@ type ProcessStatus =
 
 export const useDicomFiles = () => {
     const controllerRef = useRef<AbortController | null>(null);
-
-    /**
-     * [FR-03 변경]
-     *
-     * 기존:
-     *
-     * const [headers, setHeaders] =
-     *     useState<InspectedHeader[]>([]);
-     */
     const [parsedFiles, setParsedFiles] = useState<ParsedFileResult[]>([]);
+    const [grouping, setGrouping] = useState<DicomGroupingResult | null>(null);
     const [status, setStatus] = useState<ProcessStatus>('idle');
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState<FileProcessResult | null>(null);
@@ -42,9 +41,7 @@ export const useDicomFiles = () => {
     const isBusy = status === 'collecting' || status === 'processing';
 
     const processFiles = useCallback(
-        async (
-            collect: (signal: AbortSignal) => Promise<CollectionResult>
-        ) => {
+        async (collect: (signal: AbortSignal) => Promise<CollectionResult>) => {
             if (controllerRef.current) {
                 return;
             }
@@ -53,24 +50,15 @@ export const useDicomFiles = () => {
             controllerRef.current = controller;
 
             setParsedFiles([]);
+            setGrouping(null);
             setStatus('collecting');
             setProgress(0);
             setResult(null);
             setError(null);
 
             try {
-                // ---------------------------------
-                // 1. FR-01 파일 수집
-                // ---------------------------------
-
                 const collected = await collect(controller.signal);
-
                 controller.signal.throwIfAborted();
-
-                // ---------------------------------
-                // 2. FR-01 파일 처리
-                // ---------------------------------
-
                 setStatus('processing');
 
                 const output =
@@ -87,11 +75,6 @@ export const useDicomFiles = () => {
                     );
 
                 controller.signal.throwIfAborted();
-
-                // ---------------------------------
-                // 3. FR-03 DICOM 파싱
-                // ---------------------------------
-
                 const parsedResults: ParsedFileResult[] = [];
 
                 for (const entry of output.files) {
@@ -104,44 +87,49 @@ export const useDicomFiles = () => {
 
                         controller.signal.throwIfAborted();
 
+                        const normalized = normalizeDicomFile(parsed);
                         parsedResults.push({
                             fileId: entry.id,
+                            file: entry.file,
                             parsed,
+                            normalized,
                         });
                     } catch (parseError) {
                         controller.signal.throwIfAborted();
-
-                        /**
-                         * FR-03은 class 기반 Error가 아닌
-                         * DicomParseError 객체도 사용하므로
-                         * isDicomParseError() 확인 필요
-                         */
-                        const message = isDicomParseError(parseError) ?
-                            parseError.message :
-                            parseError instanceof Error ? parseError.message : 'Failed to parse DICOM file';
+                        const message = isDicomParseError(parseError)
+                            ? parseError.message
+                            : parseError instanceof Error
+                                ? parseError.message
+                                : 'Failed to parse DICOM file';
 
                         parsedResults.push({
                             fileId: entry.id,
+                            file: entry.file,
                             parsed: null,
+                            normalized: null,
                             error: message,
                         });
                     }
                 }
 
+                const groupingFiles: DicomGroupingFile[] = parsedResults.filter((result): result is ParsedFileResult & {
+                    parsed: ParsedDicomFile;
+                    normalized: NormalizedDicomFile;
+                } => result.parsed !== null && result.normalized !== null).map(result => ({
+                    fileId: result.fileId,
+                    file: result.file,
+                    parsed: result.parsed,
+                    normalized: result.normalized,
+                }));
+                const groupingResult = groupDicomFiles(groupingFiles);
+
                 controller.signal.throwIfAborted();
 
                 setParsedFiles(parsedResults);
-
-                // ---------------------------------
-                // 4. 수집 오류 + 처리 오류 병합
-                // ---------------------------------
-
+                setGrouping(groupingResult);
                 setResult({
                     ...output,
-                    errors: [
-                        ...collected.errors,
-                        ...output.errors,
-                    ],
+                    errors: [...collected.errors, ...output.errors],
                 });
 
                 setProgress(100);
@@ -161,7 +149,6 @@ export const useDicomFiles = () => {
                     err instanceof Error ? err.message : 'Unknown processing error';
 
                 setError(message);
-
                 setStatus('error');
             } finally {
                 if (controllerRef.current === controller) {
@@ -182,6 +169,7 @@ export const useDicomFiles = () => {
         }
 
         setParsedFiles([]);
+        setGrouping(null);
         setStatus('idle');
         setProgress(0);
         setResult(null);
@@ -190,6 +178,7 @@ export const useDicomFiles = () => {
 
     return {
         parsedFiles,
+        grouping,
         status,
         progress,
         result,
