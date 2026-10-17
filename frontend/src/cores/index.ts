@@ -3,6 +3,7 @@ export { collectSelectedFiles, captureDropSources, collectDroppedFiles } from '.
 export { createFileKey, isDuplicate } from './file/duplicate';
 export { processDicomFiles } from './file/processor';
 export * from './file/types';
+export * from './file/download';
 
 export * from './binary/types';
 export * from './binary/reader';
@@ -53,3 +54,12 @@ export * from './dicom/validate/file';
 
 export * from './worker/types';
 export * from './worker/client';
+
+export * from './dicom/export/comparision';
+export * from './dicom/export/csv';
+export * from './dicom/export/diagnostics';
+export * from './dicom/export/json';
+export * from './dicom/export/metadata';
+export * from './dicom/export/search';
+export * from './dicom/export/types';
+export * from './dicom/export/utils';

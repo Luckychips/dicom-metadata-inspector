@@ -9,7 +9,7 @@ import {
     collectDroppedFiles,
 } from '@/cores';
 import { useDicomFiles } from '@/hooks/useDicomFiles';
-import { MetadataSearch } from '@/components';
+import { MetadataExport, MetadataSearch } from '@/components';
 
 const formatFileSize = (size: number): string => {
     if (size < 1024) {
@@ -263,6 +263,7 @@ const DicomDropzone = () => {
             )}
 
             {grouping && <MetadataSearch grouping={grouping} />}
+            {grouping && <MetadataExport grouping={grouping} />}
         </main>
     );
 };
