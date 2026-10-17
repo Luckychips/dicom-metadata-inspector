@@ -44,3 +44,9 @@ export * from './dicom/compare/element';
 export * from './dicom/compare/dataset';
 export * from './dicom/compare/file';
 export * from './dicom/compare/utils';
+
+export * from './dicom/diagnostic/types';
+export * from './dicom/diagnostic/utils';
+export * from './dicom/validate/element';
+export * from './dicom/validate/dataset';
+export * from './dicom/validate/file';
