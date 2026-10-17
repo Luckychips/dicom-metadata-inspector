@@ -38,3 +38,9 @@ export * from './dicom/search/types';
 export * from './dicom/search/utils';
 export * from './dicom/search/dataset';
 export * from './dicom/search/file';
+
+export * from './dicom/compare/types';
+export * from './dicom/compare/element';
+export * from './dicom/compare/dataset';
+export * from './dicom/compare/file';
+export * from './dicom/compare/utils';
