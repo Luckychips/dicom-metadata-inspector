@@ -50,3 +50,6 @@ export * from './dicom/diagnostic/utils';
 export * from './dicom/validate/element';
 export * from './dicom/validate/dataset';
 export * from './dicom/validate/file';
+
+export * from './worker/types';
+export * from './worker/client';
