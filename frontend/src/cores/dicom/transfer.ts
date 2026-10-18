@@ -15,7 +15,7 @@ import {
     JPEG_LS_LOSSLESS,
     JPEG_LS_NEAR_LOSSLESS,
     RLE_LOSSLESS,
-} from '@/cores';
+} from './_';
 import type { TransferSyntax } from './types';
 
 const ENCAPSULATED_TRANSFER_SYNTAX_UIDS = new Set<string>([
@@ -44,6 +44,28 @@ export const isEncapsulatedTransferSyntax = (uid: string): boolean => {
 
 export const resolveTransferSyntax = (uid: string): TransferSyntax => {
     const normalized = normalizeTransferSyntaxUID(uid);
+
+
+    // console.log('[Transfer Syntax]', {
+    //     uid,
+    //     normalized,
+    //     jpegUID: JPEG_BASELINE_8_BIT,
+    //     rleUID: RLE_LOSSLESS,
+    //     matched: ENCAPSULATED_TRANSFER_SYNTAX_UIDS.has(normalized),
+    // });
+
+    console.log('[Encapsulated UID Set]', {
+        size: ENCAPSULATED_TRANSFER_SYNTAX_UIDS.size,
+        values: [...ENCAPSULATED_TRANSFER_SYNTAX_UIDS],
+        jpegIncluded: ENCAPSULATED_TRANSFER_SYNTAX_UIDS.has(
+            JPEG_BASELINE_8_BIT
+        ),
+        rleIncluded: ENCAPSULATED_TRANSFER_SYNTAX_UIDS.has(
+            RLE_LOSSLESS
+        ),
+    });
+
+
     if (normalized === IMPLICIT_VR_LITTLE_ENDIAN) {
         return {
             uid: normalized,
