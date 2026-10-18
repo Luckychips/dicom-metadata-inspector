@@ -1,10 +1,10 @@
-import type { NormalizedDicomElement } from '@/cores';
 import type {
     DicomDiagnostic,
     DicomDiagnosticPathSegment,
     DicomValidationOptions,
-} from '../diagnostic/types';
-import { validateDicomElement } from './element';
+    NormalizedDicomElement,
+} from '@/cores';
+import { validateDicomElement } from '@/cores';
 
 interface ResolvedValidationOptions {
     recursive: boolean;

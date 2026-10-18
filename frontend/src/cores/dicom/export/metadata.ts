@@ -5,15 +5,15 @@ import type {
     DicomExportMetadataRow,
     DicomExportOptions,
 } from './types';
-import { createDicomJsonExport } from './json';
-import { createDicomCsvExport } from './csv';
 import {
+    createDicomCsvExport,
+    createDicomJsonExport,
     formatExportPath,
     resolveExportOptions,
     shouldExportElement,
     stringifyExportValue,
     toExportValue,
-} from './utils';
+} from './_';
 
 interface ExportContext {
     fileId: string;

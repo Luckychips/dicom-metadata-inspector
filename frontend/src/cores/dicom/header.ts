@@ -1,13 +1,14 @@
+import type { DicomElementHeader } from './types';
 import {
+    UNDEFINED_LENGTH,
+    createDicomParseError,
+    isDicomVR,
     readAscii,
     readUint16,
     readUint32,
+    usesLongValueLength,
     type BinaryContext,
 } from '@/cores';
-import { createDicomParseError } from './errors';
-import { isDicomVR, usesLongValueLength } from './vr';
-import type { DicomElementHeader } from './types';
-import { UNDEFINED_LENGTH } from './constants';
 
 export interface ElementHeaderOptions {
     explicitVR: boolean;
@@ -23,9 +24,6 @@ export const parseElementHeader = (
     const tag = { group: groupResult.value, element: elementResult.value };
     const afterTag = elementResult.nextOffset;
 
-    // -----------------------------
-    // Implicit VR
-    // -----------------------------
     if (!options.explicitVR) {
         const lengthResult = readUint32(context, afterTag);
         return {
@@ -39,9 +37,6 @@ export const parseElementHeader = (
         };
     }
 
-    // -----------------------------
-    // Explicit VR
-    // -----------------------------
     const vrResult = readAscii(context, afterTag, 2);
     if (!isDicomVR(vrResult.value)) {
         throw createDicomParseError(
@@ -74,12 +69,7 @@ export const parseElementHeader = (
         };
     }
 
-    // -----------------------------
-    // 16-bit Value Length VR
-    // -----------------------------
-
     const lengthResult = readUint16(context, vrResult.nextOffset);
-
     return {
         tag,
         vr,

@@ -3,13 +3,8 @@ import type {
     ParsedDataElement,
     ParsedDataset,
 } from '@/cores';
-import { normalizeDataset } from './dataset';
-import { getNormalizedNumber, getNormalizedString } from './utils';
-import type {
-    NormalizedCharacterSet,
-    NormalizedDicomFile,
-    NormalizedDicomSummary,
-} from './types';
+import type { NormalizedCharacterSet, NormalizedDicomFile, NormalizedDicomSummary } from './types';
+import { getNormalizedNumber, getNormalizedString, normalizeDataset } from './_';
 
 /**
  * Specific Character Set

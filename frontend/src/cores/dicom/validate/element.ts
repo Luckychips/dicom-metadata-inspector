@@ -1,9 +1,9 @@
-import type { NormalizedDicomElement } from '@/cores';
 import type {
     DicomDiagnostic,
     DicomDiagnosticPathSegment,
     DicomValidationOptions,
-} from '../diagnostic/types';
+    NormalizedDicomElement,
+} from '@/cores';
 
 const createElementDiagnostic = (
     element: NormalizedDicomElement,

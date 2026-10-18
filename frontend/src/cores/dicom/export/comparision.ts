@@ -5,15 +5,15 @@ import type {
     DicomExportOptions,
     DicomExportComparisonRow,
 } from './types';
-import { createDicomJsonExport } from './json';
-import { createDicomCsvExport } from './csv';
 import {
+    createDicomCsvExport,
+    createDicomJsonExport,
     formatExportPath,
     isSensitiveDicomTag,
     resolveExportOptions,
     stringifyExportValue,
     toExportValue,
-} from './utils';
+} from './_';
 
 const COMPARISON_COLUMNS = [
     'path',

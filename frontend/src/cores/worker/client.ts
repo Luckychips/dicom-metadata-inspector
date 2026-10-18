@@ -6,7 +6,7 @@ import type {
     DicomWorkerValidationResult,
 } from './types';
 
-export interface DicomWorkerProcessResult {
+interface DicomWorkerProcessResult {
     results: DicomWorkerFileResult[];
     validations: DicomWorkerValidationResult[];
 }

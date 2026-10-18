@@ -1,8 +1,4 @@
-import type {
-    DicomVR,
-    DicomDecodedValue,
-    TransferSyntax,
-} from '@/cores';
+import type { DicomVR, DicomDecodedValue, TransferSyntax } from '@/cores';
 
 /**
  * 정규화된 Element의 값.

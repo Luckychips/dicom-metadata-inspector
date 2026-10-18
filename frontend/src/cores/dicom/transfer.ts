@@ -44,10 +44,6 @@ export const isEncapsulatedTransferSyntax = (uid: string): boolean => {
 
 export const resolveTransferSyntax = (uid: string): TransferSyntax => {
     const normalized = normalizeTransferSyntaxUID(uid);
-
-    // ------------------------------------------
-    // Implicit VR Little Endian
-    // ------------------------------------------
     if (normalized === IMPLICIT_VR_LITTLE_ENDIAN) {
         return {
             uid: normalized,
@@ -60,9 +56,6 @@ export const resolveTransferSyntax = (uid: string): TransferSyntax => {
         };
     }
 
-    // ------------------------------------------
-    // Explicit VR Little Endian
-    // ------------------------------------------
     if (normalized === EXPLICIT_VR_LITTLE_ENDIAN) {
         return {
             uid: normalized,
@@ -75,12 +68,6 @@ export const resolveTransferSyntax = (uid: string): TransferSyntax => {
         };
     }
 
-    // ------------------------------------------
-    // Explicit VR Big Endian
-    //
-    // Retired이지만 Metadata Inspector에서는
-    // 구조 파싱 가능
-    // ------------------------------------------
     if (normalized === EXPLICIT_VR_BIG_ENDIAN) {
         return {
             uid: normalized,
@@ -93,12 +80,6 @@ export const resolveTransferSyntax = (uid: string): TransferSyntax => {
         };
     }
 
-    // ------------------------------------------
-    // Deflated Explicit VR Little Endian
-    //
-    // Dataset 자체가 deflate되어 있기 때문에
-    // 현재 Binary Reader만으로 바로 파싱 불가능
-    // ------------------------------------------
     if (normalized === DEFLATED_EXPLICIT_VR_LITTLE_ENDIAN) {
         return {
             uid: normalized,
@@ -111,14 +92,6 @@ export const resolveTransferSyntax = (uid: string): TransferSyntax => {
         };
     }
 
-    // ------------------------------------------
-    // JPEG / JPEG-LS / JPEG2000 / HTJ2K / RLE
-    //
-    // Dataset metadata는 Explicit VR LE로
-    // 파싱 가능.
-    //
-    // Pixel Data decoding만 현재 미지원.
-    // ------------------------------------------
     if (ENCAPSULATED_TRANSFER_SYNTAX_UIDS.has(normalized)) {
         return {
             uid: normalized,
@@ -131,16 +104,9 @@ export const resolveTransferSyntax = (uid: string): TransferSyntax => {
         };
     }
 
-    // ------------------------------------------
-    // Unknown
-    // ------------------------------------------
     return {
         uid: normalized,
         kind: 'unknown',
-        /**
-         * 알 수 없는 Transfer Syntax에 대해
-         * 임의로 Explicit VR LE라고 가정하지 않는다.
-         */
         explicitVR: false,
         littleEndian: true,
         encapsulated: false,

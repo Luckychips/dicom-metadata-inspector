@@ -1,11 +1,11 @@
 import type { NormalizedDicomElement } from '@/cores';
-import { dicomValueToSearchText, getMatchedSearchFields } from './utils';
 import type {
     DicomDatasetSearchContext,
     DicomSearchField,
     DicomSearchPathSegment,
     DicomSearchResult,
 } from './types';
+import { dicomValueToSearchText, getMatchedSearchFields } from './_';
 
 export interface SearchDatasetOptions {
     fields: readonly DicomSearchField[];

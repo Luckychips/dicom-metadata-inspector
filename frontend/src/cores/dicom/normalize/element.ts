@@ -1,7 +1,7 @@
-import { createTagKey, decodeDataElement, getDictionaryEntryByTag, isPrivateTag } from '@/cores';
 import type { DicomDecodedValue, ParsedDataElement, TransferSyntax } from '@/cores';
-import { formatDicomTag } from './utils';
+import { createTagKey, decodeDataElement, getDictionaryEntryByTag, isPrivateTag } from '@/cores';
 import type { NormalizedDicomElement } from './types';
+import { formatDicomTag } from './_';
 
 /**
  * Normalizer 실행 옵션
@@ -54,12 +54,6 @@ const decodeNormalizedValue = (
         };
     }
 
-    /**
-     * Unknown VR
-     *
-     * FR-07에서 해결되지 않은 경우
-     * 원본 bytes 유지
-     */
     if (element.vr === null) {
         return {
             value: element.rawValue,

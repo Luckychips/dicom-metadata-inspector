@@ -3,19 +3,14 @@ import type {
     ParsedDataElement,
     TransferSyntax,
 } from '@/cores';
-import {
-    normalizeDataElement,
-    type NormalizeElementOptions,
-} from './element';
-import type {
-    NormalizedDicomDataset,
-    NormalizedDicomElement,
-} from './types';
+import type { NormalizedDicomDataset, NormalizedDicomElement } from './types';
+import type { NormalizeElementOptions } from './_';
+import { normalizeDataElement } from './_';
 
 /**
  * 중첩 Element 개수 계산
  */
-export const countNormalizedElements = (elements: readonly NormalizedDicomElement[]): number => {
+const countNormalizedElements = (elements: readonly NormalizedDicomElement[]): number => {
     let count = 0;
     for (const element of elements) {
         count += 1;
@@ -33,7 +28,7 @@ export const countNormalizedElements = (elements: readonly NormalizedDicomElemen
 /**
  * Dataset Element 목록 정규화
  */
-export const normalizeDatasetElements = (
+const normalizeDatasetElements = (
     elements: readonly ParsedDataElement[],
     transferSyntax: TransferSyntax,
     options: NormalizeElementOptions = {}

@@ -23,14 +23,11 @@ export const createDicomParseError = (
     offset,
 });
 
-export const isDicomParseError = (
-    value: unknown
-): value is DicomParseError => {
+export const isDicomParseError = (value: unknown): value is DicomParseError => {
     if (typeof value !== 'object' || value === null) {
         return false;
     }
 
     const error = value as Partial<DicomParseError>;
-
     return (error.name === 'DicomParseError' && typeof error.code === 'string' && typeof error.message === 'string');
 };

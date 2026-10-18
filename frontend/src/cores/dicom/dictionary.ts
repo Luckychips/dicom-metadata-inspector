@@ -414,8 +414,8 @@ const STANDARD_DICTIONARY: Readonly<Record<string, DicomDictionaryEntry>> = {
         vm: '1',
     },
 };
-export const getDictionaryEntry = (group: number, element: number
-): DicomDictionaryEntry | null => {
+
+export const getDictionaryEntry = (group: number, element: number): DicomDictionaryEntry | null => {
     const key = createTagKey(group, element);
     return (STANDARD_DICTIONARY[key] ?? null);
 };

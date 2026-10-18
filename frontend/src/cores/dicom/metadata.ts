@@ -1,14 +1,12 @@
-import { createBinaryContext, readBytes } from '@/cores';
-import { parseElementHeader } from './header';
-import type {
-    FileMetaElement,
-    FileMetaInformation,
-} from './types';
+import type { FileMetaElement, FileMetaInformation } from './types';
 import {
     DICOM_DATASET_OFFSET,
     FILE_META_GROUP,
     TRANSFER_SYNTAX_UID_TAG,
-} from './constants';
+    createBinaryContext,
+    parseElementHeader,
+    readBytes,
+} from '@/cores';
 
 const decodeUI = (bytes: Uint8Array): string => {
     const value = new TextDecoder("ascii").decode(bytes);
@@ -22,21 +20,12 @@ const isTransferSyntaxTag = (group: number, element: number): boolean =>
     group === TRANSFER_SYNTAX_UID_TAG.group && element === TRANSFER_SYNTAX_UID_TAG.element;
 
 export const parseFileMeta = (buffer: ArrayBuffer): FileMetaInformation => {
-    /**
-     * File Meta는 항상 Explicit VR Little Endian
-     */
     const context = createBinaryContext(buffer, 'LE');
     let offset = DICOM_DATASET_OFFSET;
     const elements: FileMetaElement[] = [];
     let transferSyntaxUID: string | null = null;
 
     while (offset + 4 <= context.view.byteLength) {
-        /**
-         * 먼저 Group만 확인.
-         *
-         * 다음 Group이 0002가 아니면
-         * File Meta 종료.
-         */
         const group = context.view.getUint16(offset, true);
         if (group !== FILE_META_GROUP) {
             break;

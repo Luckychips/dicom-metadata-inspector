@@ -1,4 +1,4 @@
-import type { DicomExportFile } from '../dicom/export/types';
+import type { DicomExportFile } from '@/cores';
 
 export const downloadDicomExport = (exported: DicomExportFile): void => {
     const blob = new Blob([exported.content], { type: exported.mimeType });

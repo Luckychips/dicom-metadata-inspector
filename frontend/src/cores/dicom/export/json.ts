@@ -1,5 +1,5 @@
-import { createExportFileName, resolveExportOptions } from './utils';
 import type { DicomExportFile, DicomExportOptions } from './types';
+import { createExportFileName, resolveExportOptions } from './_';
 
 export const createDicomJsonExport = (data: unknown, options: DicomExportOptions = {}): DicomExportFile => {
     const resolved = resolveExportOptions(options);

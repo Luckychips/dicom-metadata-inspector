@@ -6,8 +6,7 @@ import type {
     DicomDatasetComparison,
     DicomElementComparison,
 } from './types';
-import { compareDicomElement } from './element';
-import { createIgnoredTagSet } from './utils';
+import { compareDicomElement, createIgnoredTagSet } from './_';
 
 interface ResolvedCompareOptions {
     recursive: boolean;

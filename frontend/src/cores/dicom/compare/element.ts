@@ -1,6 +1,6 @@
 import type { NormalizedDicomElement } from '@/cores';
-import { areDicomValuesEqual } from './utils';
 import type { DicomComparisonPathSegment, DicomElementComparison } from './types';
+import { areDicomValuesEqual } from './_';
 
 const getReferenceElement = (
     left: NormalizedDicomElement | null,

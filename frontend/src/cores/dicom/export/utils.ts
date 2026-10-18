@@ -11,6 +11,17 @@ const SENSITIVE_TAGS = new Set([
     '00080090', // ReferringPhysicianName
 ]);
 
+export const createExportFileName = (name: string, extension: 'json' | 'csv'): string => {
+    const sanitized = sanitizeExportFileName(name).replace(/\.(json|csv)$/i, '');
+    return `${sanitized}.${extension}`;
+}
+
+export const formatExportPath = (path: readonly { tag: string; itemIndex: number; }[]): string => {
+    return path.map(item => `${item.tag}[${item.itemIndex}]`).join('/');
+}
+
+export const isSensitiveDicomTag = (tag: string): boolean => SENSITIVE_TAGS.has(tag.toUpperCase());
+
 export const resolveExportOptions = (
     options: DicomExportOptions = {}
 ): Required<DicomExportOptions> => ({
@@ -20,26 +31,34 @@ export const resolveExportOptions = (
     fileName: options.fileName ?? 'dicom-metadata',
 });
 
-export const isSensitiveDicomTag = (tag: string): boolean => SENSITIVE_TAGS.has(tag.toUpperCase());
+export const sanitizeExportFileName = (value: string): string => {
+    return value.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 180) || 'dicom-export';
+}
 
 export const shouldExportElement = (
     element: NormalizedDicomElement,
     options: DicomExportOptions
 ): boolean => {
     return !(!options.includeSensitiveData && isSensitiveDicomTag(element.tag));
-};
+}
 
-export const formatExportPath = (
-    path: readonly {
-        tag: string;
-        itemIndex: number;
-    }[]
-): string => path.map(item => `${item.tag}[${item.itemIndex}]`).join('/');
+export const stringifyExportValue = (value: unknown): string => {
+    if (value === null || value === undefined) {
+        return '';
+    }
 
-export const toExportValue = (
-    value: NormalizedDicomValue,
-    includeBinaryData = false
-): unknown => {
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+        return String(value);
+    }
+
+    return JSON.stringify(value);
+}
+
+export const toExportValue = (value: NormalizedDicomValue, includeBinaryData = false): unknown => {
     if (value === null) {
         return null;
     }
@@ -61,29 +80,4 @@ export const toExportValue = (
     }
 
     return value;
-};
-
-export const stringifyExportValue = (value: unknown): string => {
-    if (value === null || value === undefined) {
-        return '';
-    }
-
-    if (typeof value === 'string') {
-        return value;
-    }
-
-    if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
-        return String(value);
-    }
-
-    return JSON.stringify(value);
-};
-
-export const sanitizeExportFileName = (value: string): string => {
-    return value.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 180) || 'dicom-export';
 }
-
-export const createExportFileName = (name: string, extension: 'json' | 'csv'): string => {
-    const sanitized = sanitizeExportFileName(name).replace(/\.(json|csv)$/i, '');
-    return `${sanitized}.${extension}`;
-};

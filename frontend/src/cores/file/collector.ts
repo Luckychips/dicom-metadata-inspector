@@ -23,7 +23,6 @@ const getErrorMessage = (error: unknown): string => {
     return error instanceof Error ? error.message : 'Unknown collection error';
 };
 
-// 일반 파일 및 폴더 선택
 export const collectSelectedFiles = (fileList: FileList): CollectionResult => {
     const files = Array.from(fileList).map(
         (file): CollectedFile => ({
@@ -38,14 +37,12 @@ export const collectSelectedFiles = (fileList: FileList): CollectionResult => {
     };
 };
 
-// FileSystemFileEntry -> File
 const readFileEntry = (entry: FileSystemFileEntry): Promise<File> => {
     return new Promise((resolve, reject) => {
         entry.file(resolve, reject);
     });
 };
 
-// 디렉터리의 모든 Entry 조회
 const readDirectoryEntries = (
     entry: FileSystemDirectoryEntry,
     signal?: AbortSignal
@@ -85,7 +82,6 @@ const readDirectoryEntries = (
     });
 };
 
-// 파일 또는 폴더 재귀 탐색
 const collectEntry = async (
     entry: FileSystemEntry,
     result: CollectionResult,
@@ -122,10 +118,7 @@ const collectEntry = async (
     let children: FileSystemEntry[];
 
     try {
-        children = await readDirectoryEntries(
-            entry as FileSystemDirectoryEntry,
-            signal
-        );
+        children = await readDirectoryEntries(entry as FileSystemDirectoryEntry, signal);
     } catch (error) {
         checkAborted(signal);
 
@@ -140,23 +133,15 @@ const collectEntry = async (
 
     for (const child of children) {
         checkAborted(signal);
-
         await collectEntry(child, result, signal);
     }
 };
 
-// Drop 이벤트 중 동기적으로 호출
 export const captureDropSources = (transfer: DataTransfer): DropSource[] => {
     const items = Array.from(transfer.items);
-
-    const fileItems = items.filter(
-        item => item.kind === 'file'
-    );
-
+    const fileItems = items.filter(item => item.kind === 'file');
     if (fileItems.length === 0) {
-        return Array.from(transfer.files).map(
-            file => ({kind: 'file' as const, file})
-        );
+        return Array.from(transfer.files).map(file => ({kind: 'file' as const, file}));
     }
 
     return fileItems.flatMap(
@@ -172,15 +157,11 @@ export const captureDropSources = (transfer: DataTransfer): DropSource[] => {
             }
 
             const file = item.getAsFile();
-
-            return file
-                ? [{ kind: "file", file }]
-                : [];
+            return file ? [{ kind: "file", file }] : [];
         }
     );
 };
 
-// 캡처한 Drop 데이터를 비동기적으로 수집
 export const collectDroppedFiles = async (
     sources: DropSource[],
     signal?: AbortSignal
@@ -202,11 +183,7 @@ export const collectDroppedFiles = async (
             continue;
         }
 
-        await collectEntry(
-            source.entry,
-            result,
-            signal
-        );
+        await collectEntry(source.entry, result, signal);
     }
 
     return result;

@@ -1,11 +1,11 @@
 import type { DicomGroupingResult } from '@/cores';
-import { searchNormalizedDataset } from './dataset';
 import type {
     DicomSearchField,
     DicomSearchOptions,
     DicomSearchResponse,
     DicomSearchScope,
 } from './types';
+import { searchNormalizedDataset } from './_';
 
 const DEFAULT_FIELDS: readonly DicomSearchField[] = ['tag', 'keyword', 'name', 'value', 'vr'];
 const DEFAULT_MAX_RESULTS = 1000;
@@ -20,28 +20,15 @@ const matchesScope = (
         return true;
     }
 
-    if (
-        scope.studyInstanceUID !== undefined &&
-        scope.studyInstanceUID !== studyInstanceUID
-    ) {
+    if (scope.studyInstanceUID !== undefined && scope.studyInstanceUID !== studyInstanceUID) {
         return false;
     }
 
-    if (
-        scope.seriesInstanceUID !== undefined &&
-        scope.seriesInstanceUID !== seriesInstanceUID
-    ) {
+    if (scope.seriesInstanceUID !== undefined && scope.seriesInstanceUID !== seriesInstanceUID) {
         return false;
     }
 
-    if (
-        scope.sopInstanceUID !== undefined &&
-        scope.sopInstanceUID !== sopInstanceUID
-    ) {
-        return false;
-    }
-
-    return true;
+    return !(scope.sopInstanceUID !== undefined && scope.sopInstanceUID !== sopInstanceUID);
 };
 
 const resolveMaxResults = (value: number | undefined): number => {

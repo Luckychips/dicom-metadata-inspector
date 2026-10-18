@@ -1,4 +1,3 @@
-import { sortDicomHierarchy } from './utils';
 import type {
     DicomGroupingFile,
     DicomGroupingIssue,
@@ -8,6 +7,7 @@ import type {
     DicomSeriesGroup,
     DicomStudyGroup,
 } from './types';
+import { sortDicomHierarchy } from './_';
 
 interface MutableSeriesGroup {
     seriesInstanceUID: string;

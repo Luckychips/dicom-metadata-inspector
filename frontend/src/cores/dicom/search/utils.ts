@@ -1,6 +1,16 @@
 import type { NormalizedDicomElement, NormalizedDicomValue } from '@/cores';
 import type { DicomSearchField } from './types';
 
+const includesSearchText = (source: string | null, query: string, caseSensitive: boolean): boolean => {
+    if (source === null) {
+        return false;
+    }
+
+    const normalizedSource = normalizeSearchText(source, caseSensitive);
+    const normalizedQuery = normalizeSearchText(query, caseSensitive);
+    return normalizedSource.includes(normalizedQuery);
+};
+
 /**
  * "(0010,0010)"
  * "0010,0010"
@@ -10,7 +20,7 @@ import type { DicomSearchField } from './types';
  *
  * Tag 형태가 아니면 null.
  */
-export const normalizeTagQuery = (query: string): string | null => {
+const normalizeTagQuery = (query: string): string | null => {
     const normalized = query.trim().replace(/[(),\s]/g, '').toUpperCase();
     if (!/^[0-9A-F]{8}$/.test(normalized)) {
         return null;
@@ -19,7 +29,7 @@ export const normalizeTagQuery = (query: string): string | null => {
     return normalized;
 };
 
-export const normalizeSearchText = (value: string, caseSensitive: boolean): string => {
+const normalizeSearchText = (value: string, caseSensitive: boolean): string => {
     const trimmed = value.trim();
     return caseSensitive ? trimmed : trimmed.toLocaleLowerCase();
 };
@@ -75,16 +85,6 @@ export const dicomValueToSearchText = (value: NormalizedDicomValue): string | nu
     }
 
     return null;
-};
-
-const includesSearchText = (source: string | null, query: string, caseSensitive: boolean): boolean => {
-    if (source === null) {
-        return false;
-    }
-
-    const normalizedSource = normalizeSearchText(source, caseSensitive);
-    const normalizedQuery = normalizeSearchText(query, caseSensitive);
-    return normalizedSource.includes(normalizedQuery);
 };
 
 export const getMatchedSearchFields = (

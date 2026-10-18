@@ -1,8 +1,4 @@
-import type {
-    DicomInstanceGroup,
-    DicomSeriesGroup,
-    DicomStudyGroup,
-} from './types';
+import type { DicomInstanceGroup, DicomSeriesGroup, DicomStudyGroup } from './types';
 
 const compareNullableNumber = (left: number | null, right: number | null): number => {
     if (left === null && right === null) {

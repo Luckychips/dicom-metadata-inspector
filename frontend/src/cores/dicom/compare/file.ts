@@ -4,7 +4,7 @@ import type {
     DicomFileComparison,
     DicomFileComparisonSource,
 } from './types';
-import { compareNormalizedDatasets } from './dataset';
+import { compareNormalizedDatasets } from './_';
 
 export const compareDicomFiles = (
     left: DicomFileComparisonSource,

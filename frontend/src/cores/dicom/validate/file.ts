@@ -1,12 +1,17 @@
-import { findNormalizedElement, toNormalizedNumber } from '@/cores';
-import type { NormalizedDicomElement, NormalizedDicomFile } from '@/cores';
-import { createValidationStats, isValidDicomUID } from '../diagnostic/utils';
-import { validateDatasetElements } from './dataset';
 import type {
     DicomDiagnostic,
     DicomValidationOptions,
     DicomValidationResult,
-} from '../diagnostic/types';
+    NormalizedDicomElement,
+    NormalizedDicomFile,
+} from '@/cores';
+import {
+    createValidationStats,
+    findNormalizedElement,
+    isValidDicomUID,
+    toNormalizedNumber,
+} from '@/cores';
+import { validateDatasetElements } from './_';
 
 const addFileDiagnostic = (
     diagnostics: DicomDiagnostic[],

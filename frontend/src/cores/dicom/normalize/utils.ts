@@ -1,14 +1,5 @@
 import { createTagKey } from '@/cores';
-import type {
-    NormalizedDicomElement,
-    NormalizedDicomValue,
-} from './types';
-
-export const formatDicomTag = (group: number, element: number): string => {
-    const groupHex = group.toString(16).toUpperCase().padStart(4, '0');
-    const elementHex = element.toString(16).toUpperCase().padStart(4, '0');
-    return `(${groupHex},${elementHex})`;
-};
+import type { NormalizedDicomElement, NormalizedDicomValue } from './types';
 
 /**
  * Normalized Element 조회
@@ -25,21 +16,34 @@ export const findNormalizedElement = (
     return (elements.find(item => item.tag === key) ?? null);
 };
 
+export const formatDicomTag = (group: number, element: number): string => {
+    const groupHex = group.toString(16).toUpperCase().padStart(4, '0');
+    const elementHex = element.toString(16).toUpperCase().padStart(4, '0');
+    return `(${groupHex},${elementHex})`;
+};
+
 /**
- * Value를 문자열로 변환
- *
- * UID, PN, CS, LO 등의 요약 정보 추출에 사용.
+ * Dataset에서 숫자 Attribute 조회
  */
-export const toNormalizedString = (value: NormalizedDicomValue): string | null => {
-    if (typeof value === 'string') {
-        return value || null;
-    }
+export const getNormalizedNumber = (
+    elements: readonly NormalizedDicomElement[],
+    group: number,
+    element: number
+): number | null => {
+    const found = findNormalizedElement(elements, group, element);
+    return found ? toNormalizedNumber(found.value) : null;
+};
 
-    if (typeof value === 'number' || typeof value === 'bigint') {
-        return String(value);
-    }
-
-    return null;
+/**
+ * Dataset에서 문자열 Attribute 조회
+ */
+export const getNormalizedString = (
+    elements: readonly NormalizedDicomElement[],
+    group: number,
+    element: number
+): string | null => {
+    const found = findNormalizedElement(elements, group, element);
+    return found ? toNormalizedString(found.value) : null;
 };
 
 /**
@@ -72,25 +76,18 @@ export const toNormalizedNumber = (value: NormalizedDicomValue): number | null =
 };
 
 /**
- * Dataset에서 문자열 Attribute 조회
+ * Value를 문자열로 변환
+ *
+ * UID, PN, CS, LO 등의 요약 정보 추출에 사용.
  */
-export const getNormalizedString = (
-    elements: readonly NormalizedDicomElement[],
-    group: number,
-    element: number
-): string | null => {
-    const found = findNormalizedElement(elements, group, element);
-    return found ? toNormalizedString(found.value) : null;
-};
+export const toNormalizedString = (value: NormalizedDicomValue): string | null => {
+    if (typeof value === 'string') {
+        return value || null;
+    }
 
-/**
- * Dataset에서 숫자 Attribute 조회
- */
-export const getNormalizedNumber = (
-    elements: readonly NormalizedDicomElement[],
-    group: number,
-    element: number
-): number | null => {
-    const found = findNormalizedElement(elements, group, element);
-    return found ? toNormalizedNumber(found.value) : null;
+    if (typeof value === 'number' || typeof value === 'bigint') {
+        return String(value);
+    }
+
+    return null;
 };

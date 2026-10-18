@@ -5,13 +5,13 @@ import type {
     DicomExportOptions,
     DicomExportDiagnosticRow,
 } from './types';
-import { createDicomJsonExport } from './json';
-import { createDicomCsvExport } from './csv';
 import {
+    createDicomCsvExport,
+    createDicomJsonExport,
     formatExportPath,
     isSensitiveDicomTag,
     resolveExportOptions,
-} from './utils';
+} from './_';
 
 const DIAGNOSTIC_COLUMNS = [
     'severity',
