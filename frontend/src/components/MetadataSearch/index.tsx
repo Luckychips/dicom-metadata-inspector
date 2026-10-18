@@ -49,15 +49,12 @@ export const MetadataSearch = ({ grouping }: MetadataSearchProps) => {
             return null;
         }
 
-        return searchDicomFiles(
-            grouping,
-            query, {
-                fields,
-                recursive,
-                caseSensitive: false,
-                maxResults: 1000,
-            }
-        );
+        return searchDicomFiles(grouping, query, {
+            fields,
+            recursive,
+            caseSensitive: false,
+            maxResults: 1000,
+        });
     }, [grouping, query, fields, recursive]);
 
     const handleFieldChange = (field: DicomSearchField) => {
@@ -95,33 +92,26 @@ export const MetadataSearch = ({ grouping }: MetadataSearchProps) => {
                     value={query}
                     placeholder={'Tag, keyword, name, value...'}
                     aria-label={'Search DICOM metadata'}
-                    onChange={event => setQuery(event.target.value)}
-                />
-                {query !== '' && (
-                    <button type="button" onClick={handleClear}>Clear</button>
-                )}
+                    onChange={event => setQuery(event.target.value)} />
+                {query !== '' && <button type="button" onClick={handleClear}>Clear</button>}
             </div>
             <div>
-                {SEARCH_FIELDS.map(
-                    field => (
-                        <label key={field.value}>
-                            <input
-                                type="checkbox"
-                                checked={fields.includes(field.value)}
-                                onChange={() => handleFieldChange(field.value)}
-                            />
-                            {field.label}
-                        </label>
-                    )
-                )}
+                {SEARCH_FIELDS.map(field => (
+                    <label key={field.value}>
+                        <input
+                            type="checkbox"
+                            checked={fields.includes(field.value)}
+                            onChange={() => handleFieldChange(field.value)} />
+                        {field.label}
+                    </label>
+                ))}
                 <label>
                     <input
                         type="checkbox"
                         checked={recursive}
                         onChange={
                             event => setRecursive(event.target.checked)
-                        }
-                    />
+                        } />
                     Search sequences
                 </label>
             </div>

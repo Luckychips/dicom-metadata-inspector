@@ -38,19 +38,13 @@ const DicomDropzone = () => {
     } = useDicomFiles();
     const [isDragging, setIsDragging] = useState(false);
 
-    // 일반 파일 및 폴더 선택
-    const handleFileChange = (
-        event: ChangeEvent<HTMLInputElement>
-    ): void => {
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
         const input = event.currentTarget;
-
         if (!input.files || isBusy) {
             return;
         }
 
         const collected = collectSelectedFiles(input.files);
-
-        // 같은 파일을 다시 선택할 수 있도록 초기화
         input.value = '';
 
         void processFiles(async signal => {
@@ -59,10 +53,7 @@ const DicomDropzone = () => {
         });
     };
 
-    // Drag & Drop
-    const handleDrop = (
-        event: DragEvent<HTMLDivElement>
-    ): void => {
+    const handleDrop = (event: DragEvent<HTMLDivElement>): void => {
         event.preventDefault();
         setIsDragging(false);
 
@@ -70,14 +61,8 @@ const DicomDropzone = () => {
             return;
         }
 
-        // Drop 이벤트 내에서 동기적으로 확보
         const sources = captureDropSources(event.dataTransfer);
-        void processFiles(
-            signal => collectDroppedFiles(
-                sources,
-                signal
-            )
-        );
+        void processFiles(signal => collectDroppedFiles(sources, signal));
     };
 
     const totalFiles = result?.files.length ?? 0;
@@ -89,13 +74,10 @@ const DicomDropzone = () => {
 
     return (
         <main className="inspector">
-            {/* 제목 */}
             <header>
                 <h1>DICOM Metadata Inspector</h1>
                 <p>Browser-based DICOM metadata inspection</p>
             </header>
-
-            {/* 파일 입력 */}
             <section
                 className={`dropzone ${isDragging ? "dragging" : ""}`}
                 onDragEnter={event => {
@@ -122,7 +104,6 @@ const DicomDropzone = () => {
                     in your browser.
                 </p>
                 <div className="actions">
-                    {/* 다중 파일 선택 */}
                     <label className="file-button">
                         Select Files
                         <input
@@ -132,8 +113,6 @@ const DicomDropzone = () => {
                             onChange={handleFileChange}
                         />
                     </label>
-
-                    {/* 폴더 선택 */}
                     <label className="file-button">
                         Select Folder
                         <input
@@ -141,18 +120,13 @@ const DicomDropzone = () => {
                             multiple
                             disabled={isBusy}
                             ref={element => {
-                                element?.setAttribute(
-                                    "webkitdirectory",
-                                    ""
-                                );
+                                element?.setAttribute("webkitdirectory", "");
                             }}
                             onChange={handleFileChange}
                         />
                     </label>
                 </div>
             </section>
-
-            {/* 진행률 */}
             {isBusy && (
                 <section className="progress-panel">
                     <h3>{status === "collecting" ? "Collecting files..." : "Inspecting files..."}</h3>
@@ -165,22 +139,14 @@ const DicomDropzone = () => {
                     <button type="button" onClick={cancel}>Cancel</button>
                 </section>
             )}
-
-            {/* 작업 취소 */}
             {status === "cancelled" && (<p role="status">Operation cancelled.</p>)}
-
-            {/* 전체 오류 */}
             {error && (<p role="alert">{error}</p>)}
-
-            {/* 검사 결과 */}
             {result && (
                 <section className="results">
                     <div className="result-header">
                         <h2>Inspection Results</h2>
                         <button type="button" onClick={reset}>Clear</button>
                     </div>
-
-                    {/* 검사 요약 */}
                     <div className="summary">
                         <p>Total: {totalFiles}</p>
                         <p>Part 10 candidates: {part10Count}</p>
@@ -188,22 +154,19 @@ const DicomDropzone = () => {
                         <p>Duplicates: {duplicateCount}</p>
                         <p>Errors: {errorCount}</p>
                     </div>
-
-                    {/* 파일별 Header 검사 결과 */}
                     <h3>File Headers</h3>
                     <div className="table-container">
                         <table className="dicom-table">
                             <thead>
-                            <tr>
-                                <th>File</th>
-                                <th>Size</th>
-                                <th>Detection</th>
-                                <th>Prefix</th>
-                                <th>First Tag</th>
-                                <th>Status</th>
-                            </tr>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Size</th>
+                                    <th>Detection</th>
+                                    <th>Prefix</th>
+                                    <th>First Tag</th>
+                                    <th>Status</th>
+                                </tr>
                             </thead>
-
                             <tbody>
                                 {result.files.map(file => {
                                     const parseResult = parsedFileMap.get(file.id);
@@ -231,8 +194,6 @@ const DicomDropzone = () => {
                             </tbody>
                         </table>
                     </div>
-
-                    {/* 중복 파일 */}
                     {duplicateCount > 0 && (
                         <section>
                             <h3>Duplicate Candidates</h3>
@@ -243,8 +204,6 @@ const DicomDropzone = () => {
                             </ul>
                         </section>
                     )}
-
-                    {/* 파일별 오류 */}
                     {errorCount > 0 && (
                         <section>
                             <h3>File Errors</h3>
@@ -261,7 +220,6 @@ const DicomDropzone = () => {
                     )}
                 </section>
             )}
-
             {grouping && <MetadataSearch grouping={grouping} />}
             {grouping && <MetadataExport grouping={grouping} />}
         </main>

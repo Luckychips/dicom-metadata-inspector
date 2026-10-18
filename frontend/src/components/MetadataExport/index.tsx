@@ -54,8 +54,7 @@ export const MetadataExport = ({ grouping }: MetadataExportProps) => {
                     <input
                         type="checkbox"
                         checked={includeSensitiveData}
-                        onChange={event => setIncludeSensitiveData(event.target.checked)}
-                    />
+                        onChange={event => setIncludeSensitiveData(event.target.checked)} />
                     Include sensitive metadata
                 </label>
             </div>
@@ -69,7 +68,6 @@ export const MetadataExport = ({ grouping }: MetadataExportProps) => {
                 onClick={handleExport}>
                 Export {format.toUpperCase()}
             </button>
-
             {error && (
                 <p role="alert">
                     {error}

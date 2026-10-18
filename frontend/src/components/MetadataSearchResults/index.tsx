@@ -56,16 +56,16 @@ export const MetadataSearchResults = ({ result }: MetadataSearchResultsProps) =>
             <div style={{ overflowX: 'auto' }}>
                 <table>
                     <thead>
-                    <tr>
-                        <th>File</th>
-                        <th>Tag</th>
-                        <th>Name</th>
-                        <th>Keyword</th>
-                        <th>VR</th>
-                        <th>Value</th>
-                        <th>Matched</th>
-                        <th>Path</th>
-                    </tr>
+                        <tr>
+                            <th>File</th>
+                            <th>Tag</th>
+                            <th>Name</th>
+                            <th>Keyword</th>
+                            <th>VR</th>
+                            <th>Value</th>
+                            <th>Matched</th>
+                            <th>Path</th>
+                        </tr>
                     </thead>
                     <tbody>
                     {result.results.map((item, index) => (
