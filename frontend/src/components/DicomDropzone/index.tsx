@@ -1,27 +1,13 @@
-import {
-    useState,
-    type ChangeEvent,
-    type DragEvent,
-} from 'react';
+import { useState } from 'react';
+import type { ChangeEvent, DragEvent } from 'react';
 import {
     collectSelectedFiles,
     captureDropSources,
     collectDroppedFiles,
+    getFileSize,
 } from '@/cores';
 import { useDicomFiles } from '@/hooks/useDicomFiles';
 import { MetadataExport, MetadataSearch } from '@/components';
-
-const formatFileSize = (size: number): string => {
-    if (size < 1024) {
-        return `${size} B`;
-    }
-
-    if (size < 1024 * 1024) {
-        return `${(size / 1024).toFixed(1)} KB`;
-    }
-
-    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 const DicomDropzone = () => {
     const {
@@ -87,9 +73,7 @@ const DicomDropzone = () => {
                         setIsDragging(true);
                     }
                 }}
-                onDragOver={event => {
-                    event.preventDefault();
-                }}
+                onDragOver={event => event.preventDefault()}
                 onDragLeave={event => {
                     event.preventDefault();
 
@@ -119,9 +103,7 @@ const DicomDropzone = () => {
                             type="file"
                             multiple
                             disabled={isBusy}
-                            ref={element => {
-                                element?.setAttribute("webkitdirectory", "");
-                            }}
+                            ref={element => element?.setAttribute('webkitdirectory', '')}
                             onChange={handleFileChange}
                         />
                     </label>
@@ -175,7 +157,7 @@ const DicomDropzone = () => {
                                     return (
                                         <tr key={file.id}>
                                             <td>{file.path}</td>
-                                            <td>{formatFileSize(file.size)}</td>
+                                            <td>{getFileSize(file.size)}</td>
                                             <td>{file.file.type}</td>
                                             <td>{parsed?.isPart10 ? 'Yes' : '-'}</td>
                                             <td>{parsed?.fileMeta.transferSyntaxUID ?? '-'}</td>

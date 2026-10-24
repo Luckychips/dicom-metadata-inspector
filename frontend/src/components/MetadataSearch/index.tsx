@@ -6,7 +6,7 @@ import {
 } from '@/cores';
 import { MetadataSearchResults } from '@/components';
 
-export interface MetadataSearchProps {
+interface Props {
     grouping: DicomGroupingResult | null;
 }
 
@@ -36,7 +36,7 @@ const SEARCH_FIELDS: {
     },
 ];
 
-export const MetadataSearch = ({ grouping }: MetadataSearchProps) => {
+const MetadataSearch = ({ grouping }: Props) => {
     const [query, setQuery] = useState('');
     const [fields, setFields] = useState<DicomSearchField[]>(SEARCH_FIELDS.map(item => item.value));
     const [recursive, setRecursive] = useState(true);
@@ -125,3 +125,5 @@ export const MetadataSearch = ({ grouping }: MetadataSearchProps) => {
         </section>
     );
 };
+
+export default MetadataSearch;

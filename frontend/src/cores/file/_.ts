@@ -4,3 +4,4 @@ export { collectSelectedFiles, captureDropSources, collectDroppedFiles } from '.
 export { downloadDicomExport } from './download';
 export { createFileKey } from './duplicate';
 export { processDicomFiles } from './processor';
+export { getFileSize, getFullTags } from './utils';

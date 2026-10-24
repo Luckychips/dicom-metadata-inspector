@@ -6,11 +6,11 @@ import {
     type DicomExportFormat,
 } from '@/cores';
 
-export interface MetadataExportProps {
+interface Props {
     grouping: DicomGroupingResult | null;
 }
 
-export const MetadataExport = ({ grouping }: MetadataExportProps) => {
+const MetadataExport = ({ grouping }: Props) => {
     const [format, setFormat] = useState<DicomExportFormat>('json');
     const [includeSensitiveData, setIncludeSensitiveData] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -76,3 +76,5 @@ export const MetadataExport = ({ grouping }: MetadataExportProps) => {
         </section>
     );
 };
+
+export default MetadataExport;

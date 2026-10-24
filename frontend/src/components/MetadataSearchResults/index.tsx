@@ -1,34 +1,11 @@
-import type { DicomSearchPathSegment, DicomSearchResponse } from '@/cores';
+import type { DicomSearchResponse } from '@/cores';
+import { getFileSize, getFullTags } from '@/cores';
 
-export interface MetadataSearchResultsProps {
+interface Props {
     result: DicomSearchResponse;
 }
 
-const formatPath = (path: readonly DicomSearchPathSegment[]): string => {
-    if (path.length === 0) {
-        return '-';
-    }
-
-    return path.map(segment => {
-        const name = segment.keyword ?? segment.tag;
-        return (`${name}` + `[${segment.itemIndex}]`);
-    }).join(' → ');
-};
-
-const formatFileSize = (file: File): string => {
-    const bytes = file.size;
-    if (bytes < 1024) {
-        return `${bytes} B`;
-    }
-
-    if (bytes < 1024 * 1024) {
-        return (`${(bytes / 1024).toFixed(1)} KB`);
-    }
-
-    return (`${(bytes / (1024 * 1024)).toFixed(1)} MB`);
-};
-
-export const MetadataSearchResults = ({ result }: MetadataSearchResultsProps) => {
+const MetadataSearchResults = ({ result }: Props) => {
     if (result.results.length === 0) {
         return (
             <div>
@@ -72,7 +49,7 @@ export const MetadataSearchResults = ({ result }: MetadataSearchResultsProps) =>
                         <tr key={`${item.fileId}-${item.element.tag}-${index}`}>
                             <td>
                                 <div>{item.file.name}</div>
-                                <small>{formatFileSize(item.file)}</small>
+                                <small>{getFileSize(item.file)}</small>
                             </td>
                             <td>
                                 <code>{item.element.formattedTag}</code>
@@ -84,7 +61,7 @@ export const MetadataSearchResults = ({ result }: MetadataSearchResultsProps) =>
                                 <MetadataValue value={item.displayValue} />
                             </td>
                             <td>{item.matchedFields.join(', ')}</td>
-                            <td>{formatPath(item.path)}</td>
+                            <td>{getFullTags(item.path)}</td>
                         </tr>
                     ))}
                     </tbody>
@@ -118,3 +95,5 @@ const MetadataValue = ({value,}: MetadataValueProps) => {
         </span>
     );
 };
+
+export default MetadataSearchResults;
