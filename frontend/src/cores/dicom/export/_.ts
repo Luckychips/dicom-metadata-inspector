@@ -1,7 +1,7 @@
 export * from './types';
 export { createDicomCsvExport } from './csv';
 export { createDicomJsonExport } from './json';
-export { exportDicomMetadata } from './metadata';
+export { getDicomMetadata } from './metadata';
 export {
     createExportFileName,
     formatExportPath,

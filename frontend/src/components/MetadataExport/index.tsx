@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-    exportDicomMetadata,
-    downloadDicomExport,
+    download,
+    getDicomMetadata,
     type DicomGroupingResult,
     type DicomExportFormat,
 } from '@/cores';
@@ -23,14 +23,14 @@ const MetadataExport = ({ grouping }: Props) => {
         setError(null);
 
         try {
-            const exported = exportDicomMetadata(grouping, format, {
+            const exported = getDicomMetadata(grouping, format, {
                 includeSensitiveData,
                 includeBinaryData: false,
                 prettyPrint: true,
                 fileName: 'dicom-metadata',
             });
 
-            downloadDicomExport(exported);
+            download(exported);
         } catch (cause) {
             setError(cause instanceof Error ? cause.message : 'Failed to export DICOM metadata');
         }
@@ -68,11 +68,7 @@ const MetadataExport = ({ grouping }: Props) => {
                 onClick={handleExport}>
                 Export {format.toUpperCase()}
             </button>
-            {error && (
-                <p role="alert">
-                    {error}
-                </p>
-            )}
+            {error && <p role="alert">{error}</p>}
         </section>
     );
 };

@@ -1,6 +1,6 @@
 import type { DicomExportFile } from '@/cores';
 
-export const downloadDicomExport = (exported: DicomExportFile): void => {
+export const download = (exported: DicomExportFile): void => {
     const blob = new Blob([exported.content], { type: exported.mimeType });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');

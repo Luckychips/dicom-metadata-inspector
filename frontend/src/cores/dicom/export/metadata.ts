@@ -15,6 +15,21 @@ import {
     toExportValue,
 } from './_';
 
+const METADATA_COLUMNS = [
+    'fileId',
+    'fileName',
+    'studyInstanceUID',
+    'seriesInstanceUID',
+    'sopInstanceUID',
+    'path',
+    'tag',
+    'name',
+    'keyword',
+    'vr',
+    'value',
+    'valueLength',
+] as const;
+
 interface ExportContext {
     fileId: string;
     fileName: string;
@@ -23,25 +38,24 @@ interface ExportContext {
     sopInstanceUID: string;
 }
 
-const serializeElements = (elements: readonly NormalizedDicomElement[], options: DicomExportOptions): unknown[] => {
-    return elements.filter(element => shouldExportElement(element, options))
-        .map(element => ({
-            tag: element.tag,
-            formattedTag: element.formattedTag,
-            name: element.name,
-            keyword: element.keyword,
-            vr: element.vr,
-            value: toExportValue(element.value, options.includeBinaryData),
-            valueLength: element.valueLength,
-            items: element.items?.map(item => ({
-                index: item.index,
-                elements: serializeElements(item.elements, options),
-            })) ?? null,
-        }));
+const serialize = (elements: readonly NormalizedDicomElement[], options: DicomExportOptions): unknown[] => {
+    return elements.filter(element => shouldExportElement(element, options)).map(element => ({
+        tag: element.tag,
+        formattedTag: element.formattedTag,
+        name: element.name,
+        keyword: element.keyword,
+        vr: element.vr,
+        value: toExportValue(element.value, options.includeBinaryData),
+        valueLength: element.valueLength,
+        items: element.items?.map(item => ({
+            index: item.index,
+            elements: serialize(item.elements, options),
+        })) ?? null,
+    }));
 }
 
 
-const flattenElements = (
+const flatten = (
     elements: readonly NormalizedDicomElement[],
     context: ExportContext,
     options: DicomExportOptions,
@@ -69,48 +83,24 @@ const flattenElements = (
         });
 
         for (const item of element.items ?? []) {
-            rows.push(
-                ...flattenElements(
-                    item.elements,
-                    context,
-                    options,
-                    [
-                        ...path,
-                        {
-                            tag: element.tag,
-                            itemIndex: item.index,
-                        },
-                    ]
-                )
-            );
+            rows.push(...flatten(item.elements, context, options,
+                [...path, {
+                    tag: element.tag,
+                    itemIndex: item.index,
+                }]
+            ));
         }
     }
 
     return rows;
 };
 
-const METADATA_COLUMNS = [
-    'fileId',
-    'fileName',
-    'studyInstanceUID',
-    'seriesInstanceUID',
-    'sopInstanceUID',
-    'path',
-    'tag',
-    'name',
-    'keyword',
-    'vr',
-    'value',
-    'valueLength',
-] as const;
-
-export const exportDicomMetadata = (
+export const getDicomMetadata = (
     grouping: DicomGroupingResult,
     format: DicomExportFormat,
     options: DicomExportOptions = {}
 ): DicomExportFile => {
     const resolved = resolveExportOptions(options);
-
     if (format === 'json') {
         const studies = grouping.studies.map(study => ({
             studyInstanceUID: study.studyInstanceUID,
@@ -125,7 +115,7 @@ export const exportDicomMetadata = (
                     sopInstanceUID: instance.sopInstanceUID,
                     instanceNumber: instance.instanceNumber,
                     transferSyntaxUID: instance.normalized.transferSyntax.uid,
-                    metadata: serializeElements(instance.normalized.dataset.elements, resolved),
+                    metadata: serialize(instance.normalized.dataset.elements, resolved),
                 })),
             })),
         }));
@@ -142,7 +132,7 @@ export const exportDicomMetadata = (
     for (const study of grouping.studies) {
         for (const series of study.series) {
             for (const instance of series.instances) {
-                rows.push(...flattenElements(instance.normalized.dataset.elements, {
+                rows.push(...flatten(instance.normalized.dataset.elements, {
                     fileId: instance.fileId,
                     fileName: instance.file.name,
                     studyInstanceUID:

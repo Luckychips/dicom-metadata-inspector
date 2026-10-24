@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 import {
-    collectSelectedFiles,
-    captureDropSources,
-    collectDroppedFiles,
+    getCapturedSources,
+    getCollectedFiles,
+    getCollectDroppedFiles,
     getFileSize,
 } from '@/cores';
 import { useDicomFiles } from '@/hooks/useDicomFiles';
@@ -30,7 +30,7 @@ const DicomDropzone = () => {
             return;
         }
 
-        const collected = collectSelectedFiles(input.files);
+        const collected = getCollectedFiles(input.files);
         input.value = '';
 
         void processFiles(async signal => {
@@ -47,8 +47,8 @@ const DicomDropzone = () => {
             return;
         }
 
-        const sources = captureDropSources(event.dataTransfer);
-        void processFiles(signal => collectDroppedFiles(sources, signal));
+        const sources = getCapturedSources(event.dataTransfer);
+        void processFiles(signal => getCollectDroppedFiles(sources, signal));
     };
 
     const totalFiles = result?.files.length ?? 0;

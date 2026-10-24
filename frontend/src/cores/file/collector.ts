@@ -1,40 +1,15 @@
-import type { CollectedFile, FileError } from './types';
+import type { CollectedFile, CollectionResult } from './types';
 
-export interface CollectionResult {
-    files: CollectedFile[];
-    errors: FileError[];
-}
-
-type DropSource =
-    | {
+type DropSource = {
     kind: 'entry';
     entry: FileSystemEntry;
-}
-    | {
+} | {
     kind: 'file';
     file: File;
 };
 
-const checkAborted = (signal?: AbortSignal): void => {
-    signal?.throwIfAborted();
-};
-
 const getErrorMessage = (error: unknown): string => {
     return error instanceof Error ? error.message : 'Unknown collection error';
-};
-
-export const collectSelectedFiles = (fileList: FileList): CollectionResult => {
-    const files = Array.from(fileList).map(
-        (file): CollectedFile => ({
-            file,
-            path: file.webkitRelativePath || file.name,
-        })
-    );
-
-    return {
-        files,
-        errors: [],
-    };
 };
 
 const readFileEntry = (entry: FileSystemFileEntry): Promise<File> => {
@@ -43,36 +18,28 @@ const readFileEntry = (entry: FileSystemFileEntry): Promise<File> => {
     });
 };
 
-const readDirectoryEntries = (
-    entry: FileSystemDirectoryEntry,
-    signal?: AbortSignal
-): Promise<FileSystemEntry[]> => {
+const readDirectoryEntries = (entry: FileSystemDirectoryEntry, signal?: AbortSignal): Promise<FileSystemEntry[]> => {
     const reader = entry.createReader();
     const entries: FileSystemEntry[] = [];
 
     return new Promise((resolve, reject) => {
         const readNext = (): void => {
             try {
-                checkAborted(signal);
-
-                reader.readEntries(
-                    (batch) => {
-                        try {
-                            checkAborted(signal);
-
-                            if (batch.length === 0) {
-                                resolve(entries);
-                                return;
-                            }
-
-                            entries.push(...batch);
-                            readNext();
-                        } catch (error) {
-                            reject(error);
+                signal?.throwIfAborted();
+                reader.readEntries((batch) => {
+                    try {
+                        signal?.throwIfAborted();
+                        if (batch.length === 0) {
+                            resolve(entries);
+                            return;
                         }
-                    },
-                    reject
-                );
+
+                        entries.push(...batch);
+                        readNext();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, reject);
             } catch (error) {
                 reject(error);
             }
@@ -82,25 +49,18 @@ const readDirectoryEntries = (
     });
 };
 
-const collectEntry = async (
-    entry: FileSystemEntry,
-    result: CollectionResult,
-    signal?: AbortSignal
-): Promise<void> => {
-    checkAborted(signal);
-
+const toCollect = async (entry: FileSystemEntry, result: CollectionResult, signal?: AbortSignal): Promise<void> => {
+    signal?.throwIfAborted();
     if (entry.isFile) {
         try {
             const file = await readFileEntry(entry as FileSystemFileEntry);
-            checkAborted(signal);
-
+            signal?.throwIfAborted();
             result.files.push({
                 file,
                 path: entry.fullPath,
             });
         } catch (error) {
-            checkAborted(signal);
-
+            signal?.throwIfAborted();
             result.errors.push({
                 path: entry.fullPath,
                 code: 'COLLECTION_ERROR',
@@ -116,11 +76,10 @@ const collectEntry = async (
     }
 
     let children: FileSystemEntry[];
-
     try {
         children = await readDirectoryEntries(entry as FileSystemDirectoryEntry, signal);
     } catch (error) {
-        checkAborted(signal);
+        signal?.throwIfAborted();
 
         result.errors.push({
             path: entry.fullPath,
@@ -132,48 +91,55 @@ const collectEntry = async (
     }
 
     for (const child of children) {
-        checkAborted(signal);
-        await collectEntry(child, result, signal);
+        signal?.throwIfAborted();
+        await toCollect(child, result, signal);
     }
 };
 
-export const captureDropSources = (transfer: DataTransfer): DropSource[] => {
+export const getCollectedFiles = (fileList: FileList): CollectionResult => {
+    const files = Array.from(fileList).map((file): CollectedFile => {
+        return {
+            file,
+            path: file.webkitRelativePath || file.name,
+        }
+    });
+
+    return {
+        files,
+        errors: [],
+    };
+};
+
+export const getCapturedSources = (transfer: DataTransfer): DropSource[] => {
     const items = Array.from(transfer.items);
     const fileItems = items.filter(item => item.kind === 'file');
     if (fileItems.length === 0) {
-        return Array.from(transfer.files).map(file => ({kind: 'file' as const, file}));
+        return Array.from(transfer.files).map(file => ({ kind: 'file' as const, file }));
     }
 
-    return fileItems.flatMap(
-        (item): DropSource[] => {
-            const entry =
-                item.webkitGetAsEntry?.();
+    return fileItems.flatMap((item): DropSource[] => {
+        const entry = item.webkitGetAsEntry?.();
 
-            if (entry) {
-                return [{
-                    kind: 'entry',
-                    entry,
-                }];
-            }
-
-            const file = item.getAsFile();
-            return file ? [{ kind: "file", file }] : [];
+        if (entry) {
+            return [{
+                kind: 'entry',
+                entry,
+            }];
         }
-    );
+
+        const file = item.getAsFile();
+        return file ? [{ kind: 'file', file }] : [];
+    });
 };
 
-export const collectDroppedFiles = async (
-    sources: DropSource[],
-    signal?: AbortSignal
-): Promise<CollectionResult> => {
+export const getCollectDroppedFiles = async (sources: DropSource[], signal?: AbortSignal): Promise<CollectionResult> => {
     const result: CollectionResult = {
         files: [],
         errors: [],
     };
 
     for (const source of sources) {
-        checkAborted(signal);
-
+        signal?.throwIfAborted();
         if (source.kind === 'file') {
             result.files.push({
                 file: source.file,
@@ -183,7 +149,7 @@ export const collectDroppedFiles = async (
             continue;
         }
 
-        await collectEntry(source.entry, result, signal);
+        await toCollect(source.entry, result, signal);
     }
 
     return result;

@@ -3,6 +3,11 @@ export interface CollectedFile {
     path: string;
 }
 
+export interface CollectionResult {
+    files: CollectedFile[];
+    errors: FileError[];
+}
+
 export interface DicomFileEntry {
     id: string;
     file: File;
