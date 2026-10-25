@@ -1,6 +1,17 @@
 const LONG_VR = new Set(['OB', 'OD', 'OF', 'OL', 'OV', 'OW', 'SQ', 'UC', 'UN', 'UR', 'UT', 'UV']);
 const encoder = new TextEncoder();
 
+export interface DicomFixtureOptions {
+    transferSyntaxUID?: string;
+    patientName?: string;
+    patientID?: string;
+    additionalElements?: Uint8Array[];
+    studyInstanceUID?: string;
+    seriesInstanceUID?: string;
+    sopInstanceUID?: string;
+    modality?: string;
+}
+
 export const concatBytes = (...parts: Uint8Array[]): Uint8Array => {
     const length = parts.reduce((sum, part) => sum + part.byteLength, 0);
     const result = new Uint8Array(length);
@@ -57,18 +68,11 @@ export const implicitText = (group: number, element: number, vr: string, value: 
     return implicitElement(group, element, encodeText(value, vr));
 }
 
-export interface DicomFixtureOptions {
-    transferSyntaxUID?: string;
-    patientName?: string;
-    patientID?: string;
-    additionalElements?: Uint8Array[];
-}
-
 export const createDicomFixture = (options: DicomFixtureOptions = {}): ArrayBuffer => {
     const transferSyntaxUID = options.transferSyntaxUID ?? '1.2.840.10008.1.2.1';
     const implicitVR = transferSyntaxUID === '1.2.840.10008.1.2';
     const sopClassUID = '1.2.840.10008.5.1.4.1.1.2';
-    const sopInstanceUID = '1.2.826.0.1.3680043.10.1000.101';
+    const sopInstanceUID = options.sopInstanceUID ?? '1.2.826.0.1.3680043.10.1000.101';
     const fileMetaBody = concatBytes(
         explicitText(0x0002, 0x0002, 'UI', sopClassUID),
         explicitText(0x0002, 0x0003, 'UI', sopInstanceUID),
@@ -80,7 +84,9 @@ export const createDicomFixture = (options: DicomFixtureOptions = {}): ArrayBuff
     const dataset = concatBytes(
         makeText(0x0008, 0x0016, 'UI', sopClassUID),
         makeText(0x0008, 0x0018, 'UI', sopInstanceUID),
-        makeText(0x0008, 0x0060, 'CS', 'CT'),
+        makeText(0x0008, 0x0060, 'CS', options.modality ?? 'CT'),
+        makeText(0x0020, 0x000d, 'UI', options.studyInstanceUID ?? '1.2.826.0.1.3680043.10.1000.1'),
+        makeText(0x0020, 0x000e, 'UI', options.seriesInstanceUID ?? '1.2.826.0.1.3680043.10.1000.10'),
         makeText(0x0010, 0x0010, 'PN', options.patientName ?? 'TEST_PATIENT'),
         makeText(0x0010, 0x0020, 'LO', options.patientID ?? 'TEST001'),
         ...(options.additionalElements ?? [])

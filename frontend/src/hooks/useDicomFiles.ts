@@ -28,103 +28,99 @@ export const useDicomFiles = () => {
     const isBusy = status === 'collecting' || status === 'processing';
 
     const processFiles = useCallback(async (collect: (signal: AbortSignal) => Promise<CollectionResult>) => {
-            if (controllerRef.current) {
-                return;
-            }
+        if (controllerRef.current) {
+            return;
+        }
 
-            const controller = new AbortController();
-            controllerRef.current = controller;
+        const controller = new AbortController();
+        controllerRef.current = controller;
 
-            setParsedFiles([]);
-            setGrouping(null);
-            setValidations([]);
-            setStatus('collecting');
-            setProgress(0);
-            setResult(null);
-            setError(null);
+        setParsedFiles([]);
+        setGrouping(null);
+        setValidations([]);
+        setStatus('collecting');
+        setProgress(0);
+        setResult(null);
+        setError(null);
 
-            try {
-                const collected = await collect(controller.signal);
-                controller.signal.throwIfAborted();
+        try {
+            const collected = await collect(controller.signal);
+            controller.signal.throwIfAborted();
 
-                setStatus('processing');
+            setStatus('processing');
 
-                const output = await processDicomFiles(collected.files, {
+            const output = await processDicomFiles(collected.files, {
+                signal: controller.signal,
+                onProgress: ({ percentage }) => {
+                    if (!controller.signal.aborted) {
+                        setProgress(Math.round(percentage * 0.1));
+                    }
+                },
+            });
+
+            controller.signal.throwIfAborted();
+
+            const workerResult = await processDicomFilesInWorker(
+                output.files.map(entry => ({
+                    fileId: entry.id,
+                    file: entry.file,
+                })), {
                     signal: controller.signal,
                     onProgress: ({ percentage }) => {
                         if (!controller.signal.aborted) {
-                            setProgress(Math.round(percentage * 0.1));
+                            setProgress(10 + Math.round(percentage * 0.9));
                         }
                     },
-                });
+                }
+            );
 
-                controller.signal.throwIfAborted();
+            controller.signal.throwIfAborted();
 
-                const workerResult = await processDicomFilesInWorker(
-                    output.files.map(entry => ({
-                        fileId: entry.id,
-                        file: entry.file,
-                    })), {
-                        signal: controller.signal,
-                        onProgress: ({ percentage }) => {
-                            if (!controller.signal.aborted) {
-                                setProgress(10 + Math.round(percentage * 0.9));
-                            }
-                        },
-                    });
-
-                controller.signal.throwIfAborted();
-
-                const groupingFiles: DicomGroupingFile[] = workerResult.results.flatMap(entry => {
-                        if (entry.parsed === null || entry.normalized === null) {
-                            return [];
-                        }
-
-                        return [{
-                            fileId: entry.fileId,
-                            file: entry.file,
-                            parsed: entry.parsed,
-                            normalized: entry.normalized,
-                        }];
-                    });
-
-                const groupingResult = groupDicomFiles(groupingFiles);
-
-                controller.signal.throwIfAborted();
-
-                setParsedFiles(workerResult.results);
-                setValidations(workerResult.validations);
-                setGrouping(groupingResult);
-
-                setResult({
-                    ...output,
-                    errors: [...collected.errors, ...output.errors],
-                });
-
-                setProgress(100);
-                setStatus('completed');
-            } catch (err) {
-                if (controller.signal.aborted) {
-                    setStatus('cancelled');
-                    return;
+            const groupingFiles: DicomGroupingFile[] = workerResult.results.flatMap(entry => {
+                if (entry.parsed === null || entry.normalized === null) {
+                    return [];
                 }
 
-                const message = isDicomParseError(err)
-                    ? err.message
-                    : err instanceof Error
-                        ? err.message
-                        : 'Unknown processing error';
+                return [{
+                    fileId: entry.fileId,
+                    file: entry.file,
+                    parsed: entry.parsed,
+                    normalized: entry.normalized,
+                }];
+            });
 
-                setError(message);
-                setStatus('error');
-            } finally {
-                if (controllerRef.current === controller) {
-                    controllerRef.current = null;
-                }
+            const groupingResult = groupDicomFiles(groupingFiles);
+
+            controller.signal.throwIfAborted();
+
+            setParsedFiles(workerResult.results);
+            setValidations(workerResult.validations);
+            setGrouping(groupingResult);
+            setResult({
+                ...output,
+                errors: [...collected.errors, ...output.errors],
+            });
+            setProgress(100);
+            setStatus('completed');
+        } catch (err) {
+            if (controller.signal.aborted) {
+                setStatus('cancelled');
+                return;
             }
-        },
-        []
-    );
+
+            const message = isDicomParseError(err)
+                ? err.message
+                : err instanceof Error
+                    ? err.message
+                    : 'Unknown processing error';
+            setError(message);
+            setStatus('error');
+        } finally {
+            if (controllerRef.current === controller) {
+                controllerRef.current = null;
+            }
+        }
+    }, []);
 
     const cancel = useCallback(() => {
         controllerRef.current?.abort();
