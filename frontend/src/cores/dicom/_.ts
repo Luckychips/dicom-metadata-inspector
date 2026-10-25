@@ -5,6 +5,7 @@ export {
     createTagKey,
     getDictionaryEntry,
     getDictionaryEntryByTag,
+    getDictionaryVR,
     isPrivateTag,
     resolveElementVR,
 } from './dictionary';

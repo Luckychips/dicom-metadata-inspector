@@ -66,7 +66,7 @@ describe('DICOM VR decoding', () => {
             ['DA', '20261025'],
             ['DT', '20261025123000'],
             ['LO', 'Test Description'],
-            ['PN', 'DOE^JOHN'],
+            ['PN', 'DOE_JOHN'],
             ['SH', 'SHORT'],
             ['TM', '123000'],
             ['UC', 'Unlimited Characters'],
@@ -87,7 +87,7 @@ describe('DICOM VR decoding', () => {
         });
 
         it('decodes multi-value PN', () => {
-            expect(decodeDicomValue('PN', text('DOE^JOHN\\KIM^JANE'))).toEqual(['DOE^JOHN', 'KIM^JANE']);
+            expect(decodeDicomValue('PN', text('DOE_JOHN\\KIM_JANE'))).toEqual(['DOE_JOHN', 'KIM_JANE']);
         });
     });
 

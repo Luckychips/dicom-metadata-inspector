@@ -7,11 +7,7 @@ import {
     parseFileMeta,
     parseElementHeader,
 } from '@/cores';
-import {
-    createDicomFixture,
-    createDicomTestFile,
-    explicitText,
-} from '../fixtures/dicom';
+import { createDicomFixture, createDicomTestFile, explicitText } from '../fixtures/dicom';
 
 describe('DICOM Parsing', () => {
     describe('Part 10', () => {
@@ -112,7 +108,7 @@ describe('DICOM Parsing', () => {
                 0x0010,
                 0x0010,
                 'PN',
-                'TEST^PATIENT'
+                'TEST_PATIENT'
             );
 
             const context = createBinaryContext(
