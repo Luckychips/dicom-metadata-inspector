@@ -139,10 +139,7 @@ const validateImagePixelModule = (
     }
 };
 
-export const validateDicomFile = (
-    file: NormalizedDicomFile,
-    options: DicomValidationOptions = {}
-): DicomValidationResult => {
+export const validateDicomFile = (file: NormalizedDicomFile, options: DicomValidationOptions = {}): DicomValidationResult => {
     const datasetResult = validateDatasetElements(file.dataset.elements, options);
     const diagnostics = [...datasetResult.diagnostics];
     if (!file.characterSet.supported) {
