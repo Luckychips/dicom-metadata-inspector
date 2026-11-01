@@ -20,11 +20,7 @@ export const compareDicomFiles = (
     };
 };
 
-export const compareDicomInstances = (
-    left: DicomInstanceGroup,
-    right: DicomInstanceGroup,
-    options: DicomCompareOptions = {}
-): DicomFileComparison => {
+export const compareDicomInstances = (left: DicomInstanceGroup, right: DicomInstanceGroup, options: DicomCompareOptions = {}): DicomFileComparison => {
     const aFile = {
         fileId: left.fileId,
         file: left.file,
