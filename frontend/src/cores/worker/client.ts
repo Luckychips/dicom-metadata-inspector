@@ -51,6 +51,10 @@ export const processDicomFilesInWorker = (
         };
 
         worker.onmessage = (event: MessageEvent<DicomWorkerResponse>): void => {
+            if (settled) {
+                return;
+            }
+
             const response = event.data;
             if (response.requestId !== requestId) {
                 return;
