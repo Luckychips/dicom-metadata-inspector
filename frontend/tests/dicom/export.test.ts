@@ -3,7 +3,7 @@ import { getDicomMetadata, groupDicomFiles, normalizeDicomFile, parseDicomBuffer
 import type { DicomGroupingFile, DicomGroupingResult } from '@/cores';
 import { createDicomFixture, explicitText } from '../fixtures/dicom';
 import type { DicomFixtureOptions } from '../fixtures/dicom';
-
+console.log('call');
 const uid = (value: number): string => `1.2.826.0.1.3680043.10.1000.${value}`;
 const createGroupingFile = (fileId: string, options: DicomFixtureOptions): DicomGroupingFile => {
     const buffer = createDicomFixture(options);
